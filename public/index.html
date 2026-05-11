@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>掘進データ管理</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>掘進データ管理システム</h1>
+    <nav>
+      <button id="btn-list" class="nav-btn active">一覧</button>
+      <button id="btn-input" class="nav-btn">新規入力</button>
+    </nav>
+  </header>
+
+  <main>
+    <!-- 一覧画面 -->
+    <section id="view-list">
+      <div class="search-bar">
+        <label>期間検索：
+          <input type="date" id="search-from">
+          〜
+          <input type="date" id="search-to">
+        </label>
+        <button id="btn-search">検索</button>
+        <button id="btn-reset">リセット</button>
+        <button id="btn-print" class="print-btn">🖨 印刷</button>
+      </div>
+      <div class="table-wrapper">
+        <table id="record-table">
+          <thead>
+            <tr>
+              <th>日付</th>
+              <th>切羽圧力<br>kg/cm²</th>
+              <th>送水圧<br>kg/cm²</th>
+              <th>排泥流量<br>m³/分</th>
+              <th>掘進速度<br>cm/分</th>
+              <th>元押推力<br>t</th>
+              <th>カッター<br>トルク A</th>
+              <th>送泥P1<br>rpm</th>
+              <th>排泥P2<br>rpm</th>
+              <th>排泥P3<br>rpm</th>
+              <th>排泥P4<br>rpm</th>
+              <th>ピッチング<br>±</th>
+              <th>ローリング</th>
+              <th>粘性<br>秒</th>
+              <th>比重</th>
+              <th>残土量<br>m³</th>
+              <th>推進精度<br>センター</th>
+              <th>推進精度<br>レベル</th>
+              <th>特記事項</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody id="record-tbody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 入力・編集画面 -->
+    <section id="view-form" class="hidden">
+      <h2 id="form-title">新規入力</h2>
+      <form id="data-form">
+        <input type="hidden" id="edit-id">
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label>日付 <span class="required">*</span></label>
+            <input type="date" id="f-date" required>
+          </div>
+          <div class="form-group">
+            <label>切羽圧力 (kg/cm²)</label>
+            <input type="number" step="0.01" id="f-kafuatsu">
+          </div>
+          <div class="form-group">
+            <label>送水圧 (kg/cm²)</label>
+            <input type="number" step="0.01" id="f-sousui">
+          </div>
+          <div class="form-group">
+            <label>排泥流量 (m³/分)</label>
+            <input type="number" step="0.01" id="f-hainyu-flow">
+          </div>
+          <div class="form-group">
+            <label>掘進速度 (cm/分)</label>
+            <input type="number" step="0.01" id="f-kusshin-speed">
+          </div>
+          <div class="form-group">
+            <label>元押推力 (t)</label>
+            <input type="number" step="0.01" id="f-motooshi-force">
+          </div>
+          <div class="form-group">
+            <label>カッタートルク (A)</label>
+            <input type="number" step="0.01" id="f-cutter-torque">
+          </div>
+          <div class="form-group">
+            <label>送泥P1ポンプ (rpm)</label>
+            <input type="number" step="1" id="f-souden-p1">
+          </div>
+          <div class="form-group">
+            <label>排泥P2ポンプ (rpm)</label>
+            <input type="number" step="1" id="f-haiden-p2">
+          </div>
+          <div class="form-group">
+            <label>排泥P3ポンプ (rpm)</label>
+            <input type="number" step="1" id="f-haiden-p3">
+          </div>
+          <div class="form-group">
+            <label>排泥P4ポンプ (rpm)</label>
+            <input type="number" step="1" id="f-haiden-p4">
+          </div>
+          <div class="form-group">
+            <label>ピッチング (±)</label>
+            <input type="number" step="0.1" id="f-pitching">
+          </div>
+          <div class="form-group">
+            <label>ローリング</label>
+            <input type="number" step="0.1" id="f-rolling">
+          </div>
+          <div class="form-group">
+            <label>粘性 (秒)</label>
+            <input type="number" step="0.1" id="f-viscosity">
+          </div>
+          <div class="form-group">
+            <label>比重</label>
+            <input type="number" step="0.001" id="f-specific-gravity">
+          </div>
+          <div class="form-group">
+            <label>残土量 (m³)</label>
+            <input type="number" step="0.01" id="f-zando">
+          </div>
+
+          <!-- 推進精度 センター -->
+          <div class="form-group">
+            <label>推進精度 センター</label>
+            <div class="direction-input">
+              <select id="f-precision-center-dir">
+                <option value="">-</option>
+                <option value="右">右</option>
+                <option value="左">左</option>
+              </select>
+              <input type="number" step="0.1" id="f-precision-center-val" placeholder="数値">
+            </div>
+          </div>
+
+          <!-- 推進精度 レベル -->
+          <div class="form-group">
+            <label>推進精度 レベル</label>
+            <div class="direction-input">
+              <select id="f-precision-level-dir">
+                <option value="">-</option>
+                <option value="上">上</option>
+                <option value="下">下</option>
+              </select>
+              <input type="number" step="0.1" id="f-precision-level-val" placeholder="数値">
+            </div>
+          </div>
+
+          <div class="form-group full-width">
+            <label>特記事項</label>
+            <textarea id="f-remarks" rows="3"></textarea>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn-save">保存</button>
+          <button type="button" id="btn-cancel" class="btn-cancel">キャンセル</button>
+        </div>
+      </form>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,176 +1,39 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>掘進データ管理</title>
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
-  <header>
-    <h1>掘進データ管理システム</h1>
-    <nav>
-      <button id="btn-list" class="nav-btn active">一覧</button>
-      <button id="btn-input" class="nav-btn">新規入力</button>
-    </nav>
-  </header>
-
-  <main>
-    <!-- 一覧画面 -->
-    <section id="view-list">
-      <div class="search-bar">
-        <label>期間検索：
-          <input type="date" id="search-from">
-          〜
-          <input type="date" id="search-to">
-        </label>
-        <button id="btn-search">検索</button>
-        <button id="btn-reset">リセット</button>
-        <button id="btn-print" class="print-btn">🖨 印刷</button>
-      </div>
-      <div class="table-wrapper">
-        <table id="record-table">
-          <thead>
-            <tr>
-              <th>日付</th>
-              <th>切羽圧力<br>kg/cm²</th>
-              <th>送水圧<br>kg/cm²</th>
-              <th>排泥流量<br>m³/分</th>
-              <th>掘進速度<br>cm/分</th>
-              <th>元押推力<br>t</th>
-              <th>カッター<br>トルク A</th>
-              <th>送泥P1<br>rpm</th>
-              <th>排泥P2<br>rpm</th>
-              <th>排泥P3<br>rpm</th>
-              <th>排泥P4<br>rpm</th>
-              <th>ピッチング<br>±</th>
-              <th>ローリング</th>
-              <th>粘性<br>秒</th>
-              <th>比重</th>
-              <th>残土量<br>m³</th>
-              <th>推進精度<br>センター</th>
-              <th>推進精度<br>レベル</th>
-              <th>特記事項</th>
-              <th>操作</th>
-            </tr>
-          </thead>
-          <tbody id="record-tbody"></tbody>
-        </table>
-      </div>
-    </section>
-
-    <!-- 入力・編集画面 -->
-    <section id="view-form" class="hidden">
-      <h2 id="form-title">新規入力</h2>
-      <form id="data-form">
-        <input type="hidden" id="edit-id">
-
-        <div class="form-grid">
-          <div class="form-group">
-            <label>日付 <span class="required">*</span></label>
-            <input type="date" id="f-date" required>
-          </div>
-          <div class="form-group">
-            <label>切羽圧力 (kg/cm²)</label>
-            <input type="number" step="0.01" id="f-kafuatsu">
-          </div>
-          <div class="form-group">
-            <label>送水圧 (kg/cm²)</label>
-            <input type="number" step="0.01" id="f-sousui">
-          </div>
-          <div class="form-group">
-            <label>排泥流量 (m³/分)</label>
-            <input type="number" step="0.01" id="f-hainyu-flow">
-          </div>
-          <div class="form-group">
-            <label>掘進速度 (cm/分)</label>
-            <input type="number" step="0.01" id="f-kusshin-speed">
-          </div>
-          <div class="form-group">
-            <label>元押推力 (t)</label>
-            <input type="number" step="0.01" id="f-motooshi-force">
-          </div>
-          <div class="form-group">
-            <label>カッタートルク (A)</label>
-            <input type="number" step="0.01" id="f-cutter-torque">
-          </div>
-          <div class="form-group">
-            <label>送泥P1ポンプ (rpm)</label>
-            <input type="number" step="1" id="f-souden-p1">
-          </div>
-          <div class="form-group">
-            <label>排泥P2ポンプ (rpm)</label>
-            <input type="number" step="1" id="f-haiden-p2">
-          </div>
-          <div class="form-group">
-            <label>排泥P3ポンプ (rpm)</label>
-            <input type="number" step="1" id="f-haiden-p3">
-          </div>
-          <div class="form-group">
-            <label>排泥P4ポンプ (rpm)</label>
-            <input type="number" step="1" id="f-haiden-p4">
-          </div>
-          <div class="form-group">
-            <label>ピッチング (±)</label>
-            <input type="number" step="0.1" id="f-pitching">
-          </div>
-          <div class="form-group">
-            <label>ローリング</label>
-            <input type="number" step="0.1" id="f-rolling">
-          </div>
-          <div class="form-group">
-            <label>粘性 (秒)</label>
-            <input type="number" step="0.1" id="f-viscosity">
-          </div>
-          <div class="form-group">
-            <label>比重</label>
-            <input type="number" step="0.001" id="f-specific-gravity">
-          </div>
-          <div class="form-group">
-            <label>残土量 (m³)</label>
-            <input type="number" step="0.01" id="f-zando">
-          </div>
-
-          <!-- 推進精度 センター -->
-          <div class="form-group">
-            <label>推進精度 センター</label>
-            <div class="direction-input">
-              <select id="f-precision-center-dir">
-                <option value="">-</option>
-                <option value="右">右</option>
-                <option value="左">左</option>
-              </select>
-              <input type="number" step="0.1" id="f-precision-center-val" placeholder="数値">
-            </div>
-          </div>
-
-          <!-- 推進精度 レベル -->
-          <div class="form-group">
-            <label>推進精度 レベル</label>
-            <div class="direction-input">
-              <select id="f-precision-level-dir">
-                <option value="">-</option>
-                <option value="上">上</option>
-                <option value="下">下</option>
-              </select>
-              <input type="number" step="0.1" id="f-precision-level-val" placeholder="数値">
-            </div>
-          </div>
-
-          <div class="form-group full-width">
-            <label>特記事項</label>
-            <textarea id="f-remarks" rows="3"></textarea>
-          </div>
-        </div>
-
-        <div class="form-actions">
-          <button type="submit" class="btn-save">保存</button>
-          <button type="button" id="btn-cancel" class="btn-cancel">キャンセル</button>
-        </div>
-      </form>
-    </section>
-  </main>
-
-  <script src="app.js"></script>
-</body>
-</html>
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>掘進管理システム</title>
+<style>
+body{font-family:"Yu Gothic",Meiryo,sans-serif;margin:0;background:#f4f6f8;color:#222}header{background:#123456;color:white;padding:14px 20px}main{max-width:1200px;margin:auto;padding:18px}.card{background:white;border-radius:8px;padding:14px;margin:12px 0;box-shadow:0 1px 4px #0002}label{display:block;font-size:13px;margin-bottom:8px}input,select,textarea,button{font:inherit;padding:7px;box-sizing:border-box}input,select,textarea{width:100%;border:1px solid #bbb;border-radius:4px}button{border:0;border-radius:4px;background:#1f6feb;color:white;cursor:pointer;margin:3px}.danger{background:#c62828}.gray{background:#666}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.grid6{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}table{border-collapse:collapse;width:100%;background:white}th,td{border:1px solid #ddd;padding:6px;font-size:13px;white-space:nowrap}.actions{display:flex;gap:6px}.hide{display:none}
+@media print{body{background:white}body>*:not(#printArea){display:none!important}#printArea{display:block!important}.print-page{page-break-after:always;width:277mm;height:190mm;padding:8mm;box-sizing:border-box;position:relative}.ptitle{text-align:center;font-size:22pt;margin:0 0 8mm}.phead{display:grid;grid-template-columns:1.25fr 0.85fr 0.3fr;gap:12mm;align-items:start}.uline{border-bottom:2px solid #000;min-height:8mm}.mini{border:2px solid #000;text-align:center}.mini th{background:#bbb;border:2px solid #000;font-size:13pt}.mini td{border:2px solid #000;font-size:14pt;height:10mm}.red{color:red;font-weight:bold}.pdata{margin-top:8mm;border:3px solid #000}.pdata th,.pdata td{border:2px solid #000;text-align:center;height:7.2mm;font-size:12pt;padding:0}.pdata .lbl{text-align:left;padding-left:3mm;letter-spacing:.25em}.pdata .no{width:12mm}.pdata .item{width:48mm}.remarks td{height:22mm}.logo{position:absolute;right:12mm;bottom:5mm;max-width:34mm;max-height:18mm}}
+</style></head><body><header><h2>掘進管理システム</h2></header><main>
+<div class="card"><h3>現場</h3><div class="grid"><label>現場<select id="projectSelect"></select></label><label>新規現場名<input id="newProjectName"></label><div><br><button onclick="addProject()">現場追加</button></div></div></div>
+<div class="card"><h3>印刷様式 記入欄（保存後は次回以降も使用）</h3><div class="grid">
+<label>工事名<input id="construction_name"></label><label>施工者<input id="contractor"></label><label>スパン名<input id="span_name"></label><label>管径<input id="pipe_diameter"></label>
+<label>推進距離<input id="drive_distance"></label><label>記入者<input id="writer"></label><label>右下ロゴ画像<input type="file" id="logoFile" accept="image/*"></label><div><br><button onclick="saveProjectSettings()">様式設定を保存</button><button class="gray" onclick="printAll()">一括印刷</button></div></div><img id="logoPreview" style="max-height:55px"></div>
+<div class="card"><h3 id="formTitle">新規入力</h3><input type="hidden" id="editId"><div class="grid6">
+<label>日時<input type="datetime-local" id="date"></label><label>推進管No.<input type="number" id="pipe_no"></label><label>リングNo<input id="ring_no"></label><label>切羽土圧(Mpa)<input type="number" step="0.001" id="kafuatsu"></label><label>送水圧<input type="number" step="0.001" id="sousui"></label><label>排泥流量<input type="number" step="0.001" id="hainyu_flow"></label>
+<label>掘進速度<input type="number" step="0.001" id="kusshin_speed"></label><label>元押推力<input type="number" step="0.001" id="motooshi_force"></label><label>カッタートルク<input type="number" step="0.001" id="cutter_torque"></label><label>送泥P1<input type="number" step="0.001" id="souden_p1"></label><label>排泥P2<input type="number" step="0.001" id="haiden_p2"></label><label>排泥P3<input type="number" step="0.001" id="haiden_p3"></label>
+<label>排泥P4<input type="number" step="0.001" id="haiden_p4"></label><label>ピッチング<input type="number" step="0.001" id="pitching"></label><label>ローリング<input type="number" step="0.001" id="rolling"></label><label>粘性(秒)<input type="number" step="0.001" id="viscosity"></label><label>比重<input type="number" step="0.001" id="specific_gravity"></label><label>残土量(m3)<input type="number" step="0.001" id="zando"></label>
+<label>センター方向<select id="precision_center_direction"><option></option><option>右</option><option>左</option></select></label><label>センター(mm)<input type="number" step="0.1" id="precision_center_value"></label><label>レベル方向<select id="precision_level_direction"><option></option><option>上</option><option>下</option></select></label><label>レベル(mm)<input type="number" step="0.1" id="precision_level_value"></label><label style="grid-column:span 2">特記事項<input id="remarks"></label></div><button onclick="saveRecord()">保存</button><button class="gray" onclick="resetForm()">新規に戻す</button></div>
+<div class="card"><h3>一覧（日時順）</h3><button onclick="location.href='/api/records.csv?project_id='+projectId()">CSV出力</button><div style="overflow:auto"><table><thead><tr><th>操作</th><th>日時</th><th>推進管No.</th><th>切羽土圧(Mpa)</th><th>送水圧</th><th>排泥流量</th><th>掘進速度</th><th>推進精度</th><th>特記事項</th></tr></thead><tbody id="tbody"></tbody></table></div></div>
+</main><div id="printArea" class="hide"></div>
+<script>
+let projects=[],records=[],logoData='';const ids=['date','pipe_no','ring_no','kafuatsu','sousui','hainyu_flow','kusshin_speed','motooshi_force','cutter_torque','souden_p1','haiden_p2','haiden_p3','haiden_p4','pitching','rolling','viscosity','specific_gravity','zando','precision_center_direction','precision_center_value','precision_level_direction','precision_level_value','remarks'];
+const meta=['construction_name','contractor','span_name','pipe_diameter','drive_distance','writer'];const projectId=()=>document.getElementById('projectSelect').value;
+async function loadProjects(){projects=await (await fetch('/api/projects')).json();projectSelect.innerHTML=projects.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');fillMeta();await loadRecords();await setNext();}
+function curProject(){return projects.find(p=>String(p.id)===String(projectId()))||{}}
+function fillMeta(){const p=curProject();meta.forEach(k=>document.getElementById(k).value=p[k]||'');logoData=p.logo_data||'';logoPreview.src=logoData||''}
+async function addProject(){if(!newProjectName.value)return alert('現場名を入力してください');await fetch('/api/projects',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:newProjectName.value})});newProjectName.value='';await loadProjects();}
+projectSelect.onchange=async()=>{fillMeta();await loadRecords();resetForm();}
+logoFile.onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{logoData=r.result;logoPreview.src=logoData};r.readAsDataURL(f)}
+async function saveProjectSettings(){const p=curProject();const body={...p};meta.forEach(k=>body[k]=document.getElementById(k).value);body.logo_data=logoData;await fetch('/api/projects/'+projectId(),{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});await loadProjects();alert('保存しました');}
+async function setNext(){let n=await (await fetch('/api/next-pipe-no?project_id='+projectId())).json();pipe_no.value=n.next_pipe_no;if(!date.value)date.value=new Date(Date.now()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,16)}
+async function loadRecords(){records=await (await fetch('/api/records?project_id='+projectId())).json();tbody.innerHTML=records.map(r=>`<tr><td class="actions"><button onclick="editRecord(${r.id})">編集</button><button class="danger" onclick="delRecord(${r.id})">削除</button></td><td>${fmt(r.date)}</td><td>${r.pipe_no??''}</td><td>${r.kafuatsu??''}</td><td>${r.sousui??''}</td><td>${r.hainyu_flow??''}</td><td>${r.kusshin_speed??''}</td><td>センター:${r.precision_center_direction??''}${r.precision_center_value??''} / レベル:${r.precision_level_direction??''}${r.precision_level_value??''}</td><td>${r.remarks??''}</td></tr>`).join('');}
+function fmt(v){return v?String(v).replace('T',' '):''}
+function body(){let b={project_id:projectId()};ids.forEach(k=>b[k]=document.getElementById(k).value);return b}
+async function saveRecord(){const id=editId.value;if(!date.value)return alert('日時は必須です');await fetch('/api/records'+(id?'/'+id:''),{method:id?'PUT':'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body())});resetForm();await loadRecords();}
+function editRecord(id){const r=records.find(x=>x.id===id);editId.value=id;formTitle.textContent='編集';ids.forEach(k=>document.getElementById(k).value=r[k]??'');}
+async function delRecord(id){if(confirm('削除しますか？')){await fetch('/api/records/'+id,{method:'DELETE'});await loadRecords();resetForm();}}
+async function resetForm(){editId.value='';formTitle.textContent='新規入力';ids.forEach(k=>document.getElementById(k).value='');await setNext();}
+function val(r,k){return r[k]??''}function prec(r){return `C ${r.precision_center_direction||''}${r.precision_center_value||''} / L ${r.precision_level_direction||''}${r.precision_level_value||''}`}
+function row(no,label,unit,key,chunk){return `<tr><td class="no">${no}</td><td class="item lbl">${label}<span style="float:right;letter-spacing:0">${unit||''}</span></td>${chunk.map(r=>`<td>${key==='date'?String(r.date||'').slice(5,16).replace('T','<br>'):key==='precision'?prec(r):val(r,key)}</td>`).join('')}</tr>`}
+function printAll(){const p=curProject();let pages=[];for(let i=0;i<records.length||i===0;i+=10){let c=records.slice(i,i+10);while(c.length<10)c.push({});pages.push(`<section class="print-page"><h1 class="ptitle">泥水式推進工データー表</h1><div class="phead"><div><div>工事名　<span class="uline">${p.construction_name||''}</span></div><div>施工者　<span class="uline">${p.contractor||''}</span></div></div><table class="mini"><tr><th>スパン名</th><th>管径</th><th>推進距離</th></tr><tr><td class="red">${p.span_name||''}</td><td>${p.pipe_diameter||''}</td><td>${p.drive_distance||''}</td></tr></table><table class="mini"><tr><th>記入者</th></tr><tr><td>${p.writer||''}</td></tr></table></div><table class="pdata">${row(1,'推進管No.','', 'pipe_no',c)}${row(2,'日付','', 'date',c)}${row(3,'切羽土圧','Mpa','kafuatsu',c)}${row(4,'送水圧','','sousui',c)}${row(5,'排泥流量','m3/分','hainyu_flow',c)}${row(6,'掘進速度','cm/分','kusshin_speed',c)}${row(7,'元押推力','t','motooshi_force',c)}${row(8,'カッタートルク','A','cutter_torque',c)}${row(9,'送泥P1ポンプ','rpm','souden_p1',c)}${row(10,'排泥P2ポンプ','rpm','haiden_p2',c)}${row(11,'排泥P3ポンプ','','haiden_p3',c)}${row(12,'排泥P4ポンプ','','haiden_p4',c)}${row(13,'ピッチング','±','pitching',c)}${row(14,'ローリング','±','rolling',c)}${row(15,'粘性','(秒)','viscosity',c)}${row(16,'比重','','specific_gravity',c)}${row(17,'残土量','m3','zando',c)}${row(18,'推進精度','センター/レベル(mm)','precision',c)}${row(20,'特記事項','','remarks',c)}</table>${p.logo_data?`<img class="logo" src="${p.logo_data}">`:''}</section>`)}printArea.innerHTML=pages.join('');window.print();}
+loadProjects();
+</script></body></html>

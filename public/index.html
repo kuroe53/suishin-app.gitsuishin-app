@@ -2,217 +2,234 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>掘進管理システム</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <style>
-body{font-family:"Yu Gothic","Meiryo",sans-serif;margin:16px;background:#f6f7f8;color:#111}
-h1{font-size:22px;margin:0 0 12px}.card{background:#fff;border:1px solid #ccc;border-radius:8px;padding:12px;margin-bottom:12px}
-label{display:block;font-size:12px;margin-bottom:3px}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
-input,select,textarea,button{font:inherit;box-sizing:border-box}input,select,textarea{width:100%;padding:6px;border:1px solid #aaa;border-radius:4px}
-button{padding:7px 12px;border:1px solid #333;background:#fff;border-radius:4px;cursor:pointer}button.primary{background:#1f6feb;color:#fff;border-color:#1f6feb}
-table{border-collapse:collapse;width:100%;background:#fff}th,td{border:1px solid #ccc;padding:4px;font-size:12px;text-align:center}th{background:#e9ecef}
-.small{font-size:12px;color:#555}.actions{display:flex;gap:8px;flex-wrap:wrap}.hidden{display:none}
+*{box-sizing:border-box} body{font-family:"Yu Gothic","Meiryo",sans-serif;margin:16px;color:#111;background:#f6f7f8}
+h1{font-size:24px;margin:0 0 14px}.card{background:#fff;border:1px solid #ddd;border-radius:8px;padding:14px;margin:12px 0}
+label{display:block;font-size:13px;margin-bottom:3px}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+input,select,textarea,button{font:inherit;padding:7px;border:1px solid #aaa;border-radius:4px;width:100%}
+button{cursor:pointer;background:#143d73;color:#fff;border:0}.btns{display:flex;gap:8px;flex-wrap:wrap}.btns button{width:auto}
+table{border-collapse:collapse;width:100%;background:#fff} th,td{border:1px solid #bbb;padding:5px;font-size:13px;text-align:center} th{background:#e8edf3}
+.small{font-size:12px;color:#555}.danger{background:#9b1c1c}.edit{background:#666}
+@media(max-width:900px){.grid{grid-template-columns:repeat(2,1fr)}}
+#printArea{display:none}
+
+/* ===== 印刷 A4横 ===== */
 @media print{
- body{margin:0;background:#fff}.no-print{display:none!important}.print-area{display:block!important}
- @page{size:A4 landscape;margin:7mm}
- .print-page{page-break-after:always;width:283mm;height:196mm;box-sizing:border-box;background:#fff;position:relative;padding:5mm 6mm 4mm 6mm;overflow:hidden}
+  body>*:not(#printArea){display:none!important}
+  body{margin:0;background:#fff}
+  #printArea{display:block!important}
+  @page{size:A4 landscape;margin:5mm}
+  .print-page{
+    width:287mm;height:200mm;page-break-after:always;position:relative;
+    padding:3mm 4mm 3mm 4mm;background:#fff;overflow:hidden;
+    font-family:"Yu Mincho","MS Mincho",serif;color:#000;
+  }
+  .print-title{text-align:center;font-size:18pt;margin:0 0 4mm}
+  .print-head{display:grid;grid-template-columns:125mm 92mm 28mm;gap:5mm;align-items:start;margin-bottom:4mm}
+  .line-row{display:grid;grid-template-columns:18mm 1fr;align-items:end;margin:2mm 0;font-size:10pt}
+  .line-row b{font-weight:normal}.line-val{border-bottom:1.5px solid #000;min-height:6mm;padding:0 2mm;white-space:nowrap;overflow:hidden}
+  .info3{display:grid;grid-template-columns:1fr 1fr 1fr;border:1.6px solid #000}
+  .info3>div{border-right:1.4px solid #000}.info3>div:last-child{border-right:0}
+  .info3 .cap{background:#c8c8c8;border-bottom:1.4px solid #000;text-align:center;height:8mm;line-height:8mm;font-size:10pt}
+  .info3 .val{height:12mm;line-height:12mm;text-align:center;font-size:13pt;font-weight:bold;overflow:hidden}
+  .writer{border:1.6px solid #000}.writer .cap{background:#c8c8c8;border-bottom:1.4px solid #000;text-align:center;height:8mm;line-height:8mm}.writer .val{height:12mm;line-height:12mm;text-align:center;font-size:12pt}
+  .data-table{width:100%;border-collapse:collapse;table-layout:fixed;border:2px solid #000}
+  .data-table td,.data-table th{border:1.2px solid #000;padding:0;text-align:center;vertical-align:middle;color:#000}
+  .label-col{width:52mm;text-align:left!important;padding-left:3mm!important;font-size:9.2pt;height:6.4mm}
+  .data-table .unit{font-size:8pt;margin-left:2mm}
+  .data-table .data-cell{width:22.5mm;font-size:9pt;height:6.4mm}
+  .data-table .remarks-row td{height:23mm}
+  .remarks-label{text-align:left!important;padding-left:3mm!important;font-size:11pt}
+  .logo{position:absolute;right:6mm;bottom:2mm;max-width:36mm;max-height:14mm;object-fit:contain}
+  .no-logo{position:absolute;right:8mm;bottom:5mm;color:#cc3300;font-size:18pt;font-weight:bold;font-family:sans-serif}
 }
-.print-area{display:none}
-.print-title{text-align:center;font-family:serif;font-size:18pt;margin:0 0 7mm}
-.print-head{display:grid;grid-template-columns:42% 38% 13%;gap:7mm;align-items:start;margin-bottom:6mm}
-.line-field{font-family:serif;font-size:11pt;border-bottom:2px solid #000;min-height:7mm;padding:1mm 2mm;white-space:nowrap;overflow:hidden}
-.line-field b{font-size:10pt;margin-right:8mm}
-.info-table{width:100%;font-family:serif}.info-table td,.info-table th{border:2px solid #000;padding:2mm;font-size:12pt}.info-table th{background:#c9c9c9;font-weight:normal}.red{color:red;font-weight:bold}
-.print-table{width:100%;table-layout:fixed;font-family:serif;border:3px solid #000}
-.print-table td,.print-table th{border:1.8px solid #000;padding:0.7mm 1mm;height:7mm;font-size:10pt;overflow:hidden}
-.print-table .no{width:12mm;text-align:center}.print-table .item{width:54mm;text-align:left;font-size:10.5pt;letter-spacing:.12em}.print-table .val{text-align:center}
-.note-row td{height:21mm}.logo{position:absolute;right:12mm;bottom:4mm;max-width:34mm;max-height:16mm}
 </style>
 </head>
 <body>
-<div class="no-print">
 <h1>掘進管理システム</h1>
 <div class="card">
-  <div class="actions">
-    <select id="projectSelect" style="max-width:260px"></select>
-    <input id="newProjectName" placeholder="追加する現場名" style="max-width:260px">
-    <button onclick="addProject()">現場を追加</button>
-    <button onclick="renameProject()">現場名変更</button>
-    <button class="primary" onclick="preparePrint();window.print()">一括印刷</button>
+  <h2>現場</h2>
+  <div class="grid"><div><label>現場選択</label><select id="projectSelect"></select></div><div><label>新規現場名</label><input id="newProjectName"></div><div style="align-self:end"><button onclick="addProject()">現場を追加</button></div></div>
+</div>
+
+<div class="card">
+  <h2>印刷様式記入欄</h2>
+  <div class="grid">
+    <div><label>工事名</label><input id="construction_name"></div><div><label>施工者</label><input id="contractor"></div>
+    <div><label>スパン名</label><input id="span_name"></div><div><label>管径</label><input id="pipe_diameter"></div>
+    <div><label>推進距離</label><input id="push_distance"></div><div><label>記入者</label><input id="writer"></div>
+    <div><label>右下ロゴ画像</label><input type="file" id="logoFile" accept="image/*"></div>
   </div>
-  <p class="small">現場を追加できない不具合対策として、API・画面処理を作り直しています。</p>
+  <div class="btns" style="margin-top:10px"><button onclick="saveSettings()">様式設定を保存</button><button onclick="printAll()">一括印刷</button></div>
+  <div class="small">※設定は現場ごとに保存され、印刷に反映されます。</div>
 </div>
 
 <div class="card">
-<h2>印刷様式記入欄</h2>
-<div class="grid">
-  <div><label>工事名</label><input id="construction_name"></div>
-  <div><label>施工者</label><input id="contractor"></div>
-  <div><label>スパン名</label><input id="span_name"></div>
-  <div><label>管径</label><input id="pipe_diameter"></div>
-  <div><label>推進距離</label><input id="jacking_distance"></div>
-  <div><label>記入者</label><input id="writer"></div>
-  <div><label>右下ロゴ画像</label><input type="file" id="logoFile" accept="image/*"></div>
-  <div><label>&nbsp;</label><button class="primary" onclick="saveSettings()">様式設定を保存</button></div>
-</div>
-<input type="hidden" id="logo_data">
-</div>
-
-<div class="card">
-<h2 id="formTitle">新規入力</h2>
-<input type="hidden" id="recordId">
-<div class="grid">
- <div><label>推進管No.</label><input id="pipe_no" type="number" step="1"></div>
- <div><label>日時</label><input id="date" type="datetime-local"></div>
- <div><label>切羽土圧（Mpa）</label><input id="face_earth_pressure" type="number" step="any"></div>
- <div><label>送水圧（kg/cm2）</label><input id="sousui" type="number" step="any"></div>
- <div><label>排泥流量（m3/分）</label><input id="hainyu_flow" type="number" step="any"></div>
- <div><label>掘進速度（cm/分）</label><input id="kusshin_speed" type="number" step="any"></div>
- <div><label>元押し推力（kN）</label><input id="motooshi_force" type="number" step="any"></div>
- <div><label>カッタートルク（A）</label><input id="cutter_torque" type="number" step="any"></div>
- <div><label>送泥P1ポンプ（rpm）</label><input id="souden_p1" type="number" step="any"></div>
- <div><label>排泥P2ポンプ（rpm）</label><input id="haiden_p2" type="number" step="any"></div>
- <div><label>排泥P3ポンプ</label><input id="haiden_p3" type="number" step="any"></div>
- <div><label>排泥P4ポンプ</label><input id="haiden_p4" type="number" step="any"></div>
- <div><label>ピッチング</label><input id="pitching" type="number" step="any"></div>
- <div><label>ローリング</label><input id="rolling" type="number" step="any"></div>
- <div><label>粘性（秒）</label><input id="viscosity" type="number" step="any"></div>
- <div><label>比重</label><input id="specific_gravity" type="number" step="any"></div>
- <div><label>残土量（m3）</label><input id="zando" type="number" step="any"></div>
- <div><label>推進精度 センター方向</label><select id="precision_center_direction"><option></option><option>右</option><option>左</option></select></div>
- <div><label>推進精度 センター値（mm）</label><input id="precision_center_value" type="number" step="any"></div>
- <div><label>推進精度 レベル方向</label><select id="precision_level_direction"><option></option><option>上</option><option>下</option></select></div>
- <div><label>推進精度 レベル値（mm）</label><input id="precision_level_value" type="number" step="any"></div>
- <div style="grid-column:span 4"><label>特記事項</label><textarea id="remarks"></textarea></div>
-</div>
-<div class="actions" style="margin-top:10px">
- <button class="primary" onclick="saveRecord()">保存</button>
- <button onclick="clearForm()">新規入力に戻す</button>
-</div>
+  <h2>掘進データ入力</h2>
+  <input type="hidden" id="editId">
+  <div class="grid">
+    <div><label>推進管No.</label><input id="pipe_no" type="number"></div><div><label>日時</label><input id="date" type="datetime-local"></div>
+    <div><label>切羽土圧 Mpa</label><input id="kafuatsu" type="number" step="any"></div><div><label>送水圧 kg/cm2</label><input id="sousui" type="number" step="any"></div>
+    <div><label>排泥流量 m3/分</label><input id="hainyu_flow" type="number" step="any"></div><div><label>掘進速度 cm/分</label><input id="kusshin_speed" type="number" step="any"></div>
+    <div><label>元押し推力 kN</label><input id="motooshi_force" type="number" step="any"></div><div><label>カッタートルク A</label><input id="cutter_torque" type="number" step="any"></div>
+    <div><label>送泥P1ポンプ rpm</label><input id="souden_p1" type="number" step="any"></div><div><label>排泥P2ポンプ rpm</label><input id="haiden_p2" type="number" step="any"></div>
+    <div><label>排泥P3ポンプ</label><input id="haiden_p3" type="number" step="any"></div><div><label>排泥P4ポンプ</label><input id="haiden_p4" type="number" step="any"></div>
+    <div><label>ピッチング ±</label><input id="pitching" type="number" step="any"></div><div><label>ローリング ±</label><input id="rolling" type="number" step="any"></div>
+    <div><label>粘性 秒</label><input id="viscosity" type="number" step="any"></div><div><label>比重</label><input id="specific_gravity" type="number" step="any"></div>
+    <div><label>残土量 m3</label><input id="zando" type="number" step="any"></div>
+    <div><label>センター方向</label><select id="precision_center_direction"><option></option><option>右</option><option>左</option></select></div>
+    <div><label>センター mm</label><input id="precision_center_value" type="number" step="any"></div>
+    <div><label>レベル方向</label><select id="precision_level_direction"><option></option><option>上</option><option>下</option></select></div>
+    <div><label>レベル mm</label><input id="precision_level_value" type="number" step="any"></div>
+    <div style="grid-column:span 4"><label>特記事項</label><textarea id="remarks"></textarea></div>
+  </div>
+  <div class="btns" style="margin-top:10px"><button onclick="saveRecord()">保存</button><button class="edit" onclick="clearForm()">新規入力へ戻る</button></div>
 </div>
 
 <div class="card">
-<h2>入力済みデータ</h2>
-<table id="listTable"></table>
-</div>
+  <h2>一覧</h2>
+  <table id="list"></table>
 </div>
 
-<div id="printArea" class="print-area"></div>
+<div id="printArea"></div>
 
 <script>
-let currentProjectId=1, records=[], settings={};
-const recordFields=['pipe_no','date','face_earth_pressure','sousui','hainyu_flow','kusshin_speed','motooshi_force','cutter_torque','souden_p1','haiden_p2','haiden_p3','haiden_p4','pitching','rolling','viscosity','specific_gravity','zando','precision_center_direction','precision_center_value','precision_level_direction','precision_level_value','remarks'];
-const settingFields=['construction_name','contractor','span_name','pipe_diameter','jacking_distance','writer','logo_data'];
-const esc=s=>(s??'').toString().replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-const val=(r,k)=>esc(r?.[k]??'');
-async function api(url,opt){const r=await fetch(url,opt); const j=await r.json().catch(()=>({})); if(!r.ok) throw new Error(j.error||'通信エラー'); return j;}
-function nowLocal(){const d=new Date(); d.setMinutes(d.getMinutes()-d.getTimezoneOffset()); return d.toISOString().slice(0,16);}
+let projects=[], currentProjectId=1, records=[], settings={}, logoData='';
+
+const ids=['pipe_no','date','kafuatsu','sousui','hainyu_flow','kusshin_speed','motooshi_force','cutter_torque','souden_p1','haiden_p2','haiden_p3','haiden_p4','pitching','rolling','viscosity','specific_gravity','zando','precision_center_direction','precision_center_value','precision_level_direction','precision_level_value','remarks'];
+const settingIds=['construction_name','contractor','span_name','pipe_diameter','push_distance','writer'];
+
+function v(id){return document.getElementById(id).value}
+function setv(id,val){document.getElementById(id).value = val ?? ''}
+function fmtDateTime(s){
+  if(!s) return '';
+  const d = new Date(s);
+  if(isNaN(d)) return String(s).replace('T',' ').slice(0,16);
+  const pad=n=>String(n).padStart(2,'0');
+  return `${d.getFullYear()}/${pad(d.getMonth()+1)}/${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+function val(x){return x===null||x===undefined?'':x}
+function precision(dir,num){return (dir||'') + (num!==null&&num!==undefined&&num!=='' ? String(num) : '')}
+
 async function loadProjects(){
- const ps=await api('/api/projects'); const sel=document.getElementById('projectSelect'); sel.innerHTML='';
- ps.forEach(p=>sel.add(new Option(p.name,p.id))); if(ps.length){currentProjectId=Number(sel.value||ps[0].id);}
- sel.onchange=()=>{currentProjectId=Number(sel.value); loadAll();};
+  projects = await (await fetch('/api/projects')).json();
+  const sel=document.getElementById('projectSelect');
+  sel.innerHTML=projects.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
+  if(projects[0] && !projects.some(p=>p.id==currentProjectId)) currentProjectId=projects[0].id;
+  sel.value=currentProjectId;
+  sel.onchange=()=>{currentProjectId=Number(sel.value); loadAll();}
 }
 async function addProject(){
- const name=document.getElementById('newProjectName').value.trim(); if(!name) return alert('現場名を入力してください');
- const p=await api('/api/projects',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name})});
- document.getElementById('newProjectName').value=''; await loadProjects(); document.getElementById('projectSelect').value=p.id; currentProjectId=p.id; await loadAll();
-}
-async function renameProject(){
- const sel=document.getElementById('projectSelect'); const name=prompt('新しい現場名', sel.options[sel.selectedIndex]?.text||''); if(!name) return;
- await api('/api/projects/'+currentProjectId,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({name})}); await loadProjects(); document.getElementById('projectSelect').value=currentProjectId;
+  const name=v('newProjectName').trim();
+  if(!name){alert('現場名を入力してください');return}
+  const r=await fetch('/api/projects',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name})});
+  const data=await r.json(); if(data.error){alert(data.error);return}
+  currentProjectId=data.id; setv('newProjectName',''); await loadProjects(); await loadAll();
 }
 async function loadSettings(){
- settings=await api('/api/settings/'+currentProjectId);
- settingFields.forEach(f=>{ if(document.getElementById(f)) document.getElementById(f).value=settings[f]||''; });
+  settings = await (await fetch('/api/settings/'+currentProjectId)).json();
+  settingIds.forEach(id=>setv(id, settings[id]||''));
+  logoData=settings.logo_data||'';
 }
 async function saveSettings(){
- const b={}; settingFields.forEach(f=>b[f]=document.getElementById(f).value||'');
- settings=await api('/api/settings/'+currentProjectId,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)});
- await loadSettings(); alert('様式設定を保存しました');
+  const body={}; settingIds.forEach(id=>body[id]=v(id)); body.logo_data=logoData;
+  const r=await fetch('/api/settings/'+currentProjectId,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  const data=await r.json(); if(data.error){alert(data.error);return}
+  await loadSettings(); alert('様式設定を保存しました');
 }
-document.getElementById('logoFile').addEventListener('change',e=>{
- const file=e.target.files[0]; if(!file) return;
- const rd=new FileReader(); rd.onload=()=>document.getElementById('logo_data').value=rd.result; rd.readAsDataURL(file);
+document.getElementById('logoFile').addEventListener('change', e=>{
+  const f=e.target.files[0]; if(!f) return;
+  const reader=new FileReader(); reader.onload=()=>{logoData=reader.result;}; reader.readAsDataURL(f);
 });
-async function setNextPipeNo(){ const j=await api('/api/next-pipe-no?project_id='+currentProjectId); document.getElementById('pipe_no').value=j.next; }
-function collectRecord(){
- const b={project_id:currentProjectId};
- recordFields.forEach(f=>b[f]=document.getElementById(f).value);
- return b;
+async function loadRecords(){
+  records = await (await fetch('/api/records?project_id='+currentProjectId)).json();
+  renderList();
 }
+async function nextPipeNo(){
+  const d=await (await fetch('/api/records/next-pipe-no/'+currentProjectId)).json();
+  setv('pipe_no', d.next_no||1);
+}
+function formBody(){ const b={project_id:currentProjectId}; ids.forEach(id=>b[id]=v(id)); return b; }
 async function saveRecord(){
- const id=document.getElementById('recordId').value; const body=collectRecord();
- if(!body.date) return alert('日時を入力してください');
- if(id) await api('/api/records/'+id,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
- else await api('/api/records',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
- await clearForm(); await loadRecords();
-}
-async function clearForm(){
- document.getElementById('recordId').value=''; document.getElementById('formTitle').textContent='新規入力';
- recordFields.forEach(f=>{const el=document.getElementById(f); if(el) el.value='';});
- document.getElementById('date').value=nowLocal(); await setNextPipeNo();
+  const id=v('editId'), method=id?'PUT':'POST', url=id?'/api/records/'+id:'/api/records';
+  const r=await fetch(url,{method,headers:{'Content-Type':'application/json'},body:JSON.stringify(formBody())});
+  const data=await r.json(); if(data.error){alert(data.error);return}
+  clearForm(); await loadRecords(); await nextPipeNo();
 }
 function editRecord(id){
- const r=records.find(x=>x.id==id); if(!r) return;
- document.getElementById('recordId').value=r.id; document.getElementById('formTitle').textContent='編集';
- recordFields.forEach(f=>{const el=document.getElementById(f); if(el) el.value=(r[f]??'');});
- window.scrollTo(0,0);
+  const r=records.find(x=>x.id==id); if(!r) return;
+  setv('editId',r.id); ids.forEach(k=>setv(k,r[k]));
 }
-async function deleteRecord(id){ if(confirm('削除しますか？')){ await api('/api/records/'+id,{method:'DELETE'}); await loadRecords(); await clearForm(); } }
-async function loadRecords(){
- records=await api('/api/records?project_id='+currentProjectId);
- const t=document.getElementById('listTable');
- t.innerHTML='<tr><th>操作</th><th>推進管No.</th><th>日時</th><th>切羽土圧</th><th>送水圧</th><th>元押し推力(kN)</th><th>特記事項</th></tr>'+
- records.map(r=>`<tr><td><button onclick="editRecord(${r.id})">編集</button> <button onclick="deleteRecord(${r.id})">削除</button></td><td>${val(r,'pipe_no')}</td><td>${val(r,'date')}</td><td>${val(r,'face_earth_pressure')}</td><td>${val(r,'sousui')}</td><td>${val(r,'motooshi_force')}</td><td>${val(r,'remarks')}</td></tr>`).join('');
+async function delRecord(id){
+  if(!confirm('削除しますか？')) return;
+  await fetch('/api/records/'+id,{method:'DELETE'}); await loadRecords(); await nextPipeNo();
 }
-async function loadAll(){ await loadSettings(); await loadRecords(); await clearForm(); }
-function cell(r,k){ return `<td class="val">${val(r,k)}</td>`; }
-function row(no,label,unit,key,chunk){return `<tr><td class="no">${no}</td><td class="item">${label}${unit?`　${unit}`:''}</td>${chunk.map(r=>cell(r,key)).join('')}</tr>`}
-function precision(r,type){ if(type==='c') return `${val(r,'precision_center_direction')} ${val(r,'precision_center_value')}`.trim(); return `${val(r,'precision_level_direction')} ${val(r,'precision_level_value')}`.trim(); }
-function preparePrint(){
- const area=document.getElementById('printArea'); area.innerHTML='';
- const chunks=[]; for(let i=0;i<records.length;i+=10) chunks.push(records.slice(i,i+10)); if(!chunks.length) chunks.push([]);
- chunks.forEach(chunk=>{
-  while(chunk.length<10) chunk.push({});
-  const page=document.createElement('div'); page.className='print-page';
-  page.innerHTML=`
-   <div class="print-title">泥水式推進工データー表</div>
-   <div class="print-head">
-    <div>
-     <div class="line-field"><b>工事名</b>${esc(settings.construction_name)}</div>
-     <div class="line-field"><b>施工者</b>${esc(settings.contractor)}</div>
-    </div>
-    <table class="info-table"><tr><th>スパン名</th><th>管径</th><th>推進距離</th></tr>
-     <tr><td class="red">${esc(settings.span_name)}</td><td>${esc(settings.pipe_diameter)}</td><td>${esc(settings.jacking_distance)}</td></tr></table>
-    <table class="info-table"><tr><th>記入者</th></tr><tr><td>${esc(settings.writer)}</td></tr></table>
-   </div>
-   <table class="print-table">
-    <tr><td class="no">1</td><td class="item">推　進　管　No</td>${chunk.map(r=>`<td class="val">${val(r,'pipe_no')}</td>`).join('')}</tr>
-    <tr><td class="no">2</td><td class="item">日　付</td>${chunk.map(r=>`<td class="val">${esc((r.date||'').replace('T',' '))}</td>`).join('')}</tr>
-    ${row(3,'切　羽　土　圧','Mpa','face_earth_pressure',chunk)}
-    ${row(4,'送　水　圧','kg/cm2','sousui',chunk)}
-    ${row(5,'排　泥　流　量','m3/分','hainyu_flow',chunk)}
-    ${row(6,'掘　進　速　度','cm/分','kusshin_speed',chunk)}
-    ${row(7,'元　押　推　力','kN','motooshi_force',chunk)}
-    ${row(8,'カッタートルク','A','cutter_torque',chunk)}
-    ${row(9,'送泥P1ポンプ','rpm','souden_p1',chunk)}
-    ${row(10,'排泥P2ポンプ','rpm','haiden_p2',chunk)}
-    ${row(11,'排泥P3ポンプ','','haiden_p3',chunk)}
-    ${row(12,'排泥P4ポンプ','','haiden_p4',chunk)}
-    ${row(13,'ピッチング','土','pitching',chunk)}
-    ${row(14,'ローリング','土','rolling',chunk)}
-    ${row(15,'粘　性','(秒)','viscosity',chunk)}
-    ${row(16,'比　重','','specific_gravity',chunk)}
-    ${row(17,'残　土　量','m3','zando',chunk)}
-    <tr><td class="no">18</td><td class="item">推進精度 センター(mm)</td>${chunk.map(r=>`<td class="val">${esc(precision(r,'c'))}</td>`).join('')}</tr>
-    <tr><td class="no">19</td><td class="item">レベル(mm)</td>${chunk.map(r=>`<td class="val">${esc(precision(r,'l'))}</td>`).join('')}</tr>
-    <tr class="note-row"><td class="no">20</td><td class="item">特　記　事　項</td>${chunk.map(r=>`<td class="val">${val(r,'remarks')}</td>`).join('')}</tr>
-   </table>
-   ${settings.logo_data?`<img class="logo" src="${settings.logo_data}">`:''}`;
-  area.appendChild(page);
- });
+function clearForm(){
+  setv('editId',''); ids.forEach(id=>setv(id,'')); 
+  const now=new Date(), pad=n=>String(n).padStart(2,'0');
+  setv('date', `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`);
+  nextPipeNo();
 }
-(async()=>{ await loadProjects(); await loadAll(); })().catch(e=>alert(e.message));
+function renderList(){
+  const heads=['推進管No','日時','切羽土圧','送水圧','排泥流量','掘進速度','元押し推力','残土量','操作'];
+  document.getElementById('list').innerHTML = `<tr>${heads.map(h=>`<th>${h}</th>`).join('')}</tr>` + records.map(r=>`
+    <tr><td>${val(r.pipe_no)}</td><td>${fmtDateTime(r.date)}</td><td>${val(r.kafuatsu)}</td><td>${val(r.sousui)}</td><td>${val(r.hainyu_flow)}</td><td>${val(r.kusshin_speed)}</td><td>${val(r.motooshi_force)}</td><td>${val(r.zando)}</td>
+    <td><button class="edit" onclick="editRecord(${r.id})">編集</button> <button class="danger" onclick="delRecord(${r.id})">削除</button></td></tr>`).join('');
+}
+function row(label, unit, key, rows){
+  return `<tr><td class="label-col">${label}${unit?` <span class="unit">${unit}</span>`:''}</td>${rows.map(r=>`<td class="data-cell">${key(r)}</td>`).join('')}</tr>`;
+}
+function printAll(){
+  const pages=[]; const sorted=[...records].sort((a,b)=>String(a.date).localeCompare(String(b.date)) || (a.pipe_no||0)-(b.pipe_no||0));
+  for(let i=0;i<Math.max(sorted.length,1);i+=10){
+    const chunk=sorted.slice(i,i+10);
+    while(chunk.length<10) chunk.push({});
+    pages.push(`<section class="print-page">
+      <h1 class="print-title">泥水式推進工データー表</h1>
+      <div class="print-head">
+        <div>
+          <div class="line-row"><b>工事名</b><div class="line-val">${v('construction_name')}</div></div>
+          <div class="line-row"><b>施工者</b><div class="line-val">${v('contractor')}</div></div>
+        </div>
+        <div class="info3">
+          <div><div class="cap">スパン名</div><div class="val">${v('span_name')}</div></div>
+          <div><div class="cap">管径</div><div class="val">${v('pipe_diameter')}</div></div>
+          <div><div class="cap">推進距離</div><div class="val">${v('push_distance')}</div></div>
+        </div>
+        <div class="writer"><div class="cap">記入者</div><div class="val">${v('writer')}</div></div>
+      </div>
+      <table class="data-table">
+        ${row('推進管　No','', r=>val(r.pipe_no), chunk)}
+        ${row('日　付','', r=>fmtDateTime(r.date), chunk)}
+        ${row('切羽土圧','Mpa', r=>val(r.kafuatsu), chunk)}
+        ${row('送水圧','kg/cm2', r=>val(r.sousui), chunk)}
+        ${row('排泥流量','m3/分', r=>val(r.hainyu_flow), chunk)}
+        ${row('掘進速度','cm/分', r=>val(r.kusshin_speed), chunk)}
+        ${row('元押し推力','kN', r=>val(r.motooshi_force), chunk)}
+        ${row('カッタートルク','A', r=>val(r.cutter_torque), chunk)}
+        ${row('送泥P1ポンプ','rpm', r=>val(r.souden_p1), chunk)}
+        ${row('排泥P2ポンプ','rpm', r=>val(r.haiden_p2), chunk)}
+        ${row('排泥P3ポンプ','', r=>val(r.haiden_p3), chunk)}
+        ${row('排泥P4ポンプ','', r=>val(r.haiden_p4), chunk)}
+        ${row('ピッチング','±', r=>val(r.pitching), chunk)}
+        ${row('ローリング','±', r=>val(r.rolling), chunk)}
+        ${row('粘性','秒', r=>val(r.viscosity), chunk)}
+        ${row('比重','', r=>val(r.specific_gravity), chunk)}
+        ${row('残土量','m3', r=>val(r.zando), chunk)}
+        ${row('推進精度 センター','(mm)', r=>precision(r.precision_center_direction,r.precision_center_value), chunk)}
+        ${row('推進精度 レベル','(mm)', r=>precision(r.precision_level_direction,r.precision_level_value), chunk)}
+        <tr class="remarks-row"><td class="remarks-label">特記事項</td>${chunk.map(r=>`<td>${val(r.remarks)}</td>`).join('')}</tr>
+      </table>
+      ${logoData?`<img class="logo" src="${logoData}">`:`<div class="no-logo">DAIEI</div>`}
+    </section>`);
+  }
+  document.getElementById('printArea').innerHTML=pages.join('');
+  setTimeout(()=>window.print(),100);
+}
+async function loadAll(){ await loadSettings(); await loadRecords(); clearForm(); }
+(async()=>{ await loadProjects(); await loadAll(); })();
 </script>
 </body>
 </html>

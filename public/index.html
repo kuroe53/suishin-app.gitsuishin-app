@@ -1,235 +1,97 @@
-<!doctype html>
-<html lang="ja">
-<head>
-<meta charset="utf-8">
-<title>掘進管理システム</title>
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>掘進管理システム</title>
 <style>
-*{box-sizing:border-box} body{font-family:"Yu Gothic","Meiryo",sans-serif;margin:16px;color:#111;background:#f6f7f8}
-h1{font-size:24px;margin:0 0 14px}.card{background:#fff;border:1px solid #ddd;border-radius:8px;padding:14px;margin:12px 0}
-label{display:block;font-size:13px;margin-bottom:3px}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
-input,select,textarea,button{font:inherit;padding:7px;border:1px solid #aaa;border-radius:4px;width:100%}
-button{cursor:pointer;background:#143d73;color:#fff;border:0}.btns{display:flex;gap:8px;flex-wrap:wrap}.btns button{width:auto}
-table{border-collapse:collapse;width:100%;background:#fff} th,td{border:1px solid #bbb;padding:5px;font-size:13px;text-align:center} th{background:#e8edf3}
-.small{font-size:12px;color:#555}.danger{background:#9b1c1c}.edit{background:#666}
-@media(max-width:900px){.grid{grid-template-columns:repeat(2,1fr)}}
-#printArea{display:none}
+body{font-family:system-ui,"Yu Gothic",sans-serif;margin:0;background:#f5f6f8;color:#111}.wrap{max-width:1200px;margin:auto;padding:14px}h1{font-size:22px}.card{background:white;border:1px solid #ddd;border-radius:10px;padding:14px;margin:12px 0}input,select,button,textarea{font-size:16px;padding:8px;margin:3px;box-sizing:border-box}button{cursor:pointer;border:1px solid #777;border-radius:7px;background:#fff}.primary{background:#0b63ce;color:white}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.grid label{display:flex;flex-direction:column;font-weight:600;font-size:13px}.grid input,.grid select{width:100%}table{border-collapse:collapse;width:100%;background:white}th,td{border:1px solid #ccc;padding:6px;text-align:center}th{background:#eee}.scroll{overflow:auto}.tabs button{margin-right:8px}.hide{display:none}.printArea{display:none}
+@media(max-width:800px){.grid{grid-template-columns:repeat(2,1fr)}input,select,button,textarea{font-size:18px;padding:12px}.wrap{padding:8px}table{font-size:13px}}
+@media(max-width:520px){.grid{grid-template-columns:1fr}.tabs button{width:100%;margin:4px 0}}
+@media print{body>*:not(.printArea){display:none!important}.printArea{display:block!important} @page{size:A4 landscape;margin:4mm}.page{page-break-after:always;width:287mm;height:200mm;box-sizing:border-box;padding:2mm;font-family:"Yu Mincho","MS Mincho",serif;position:relative}.ptitle{text-align:center;font-size:20px;margin:2mm}.top{display:grid;grid-template-columns:1.2fr 1fr .35fr;gap:10mm;align-items:end}.line{border-bottom:2px solid #000;min-height:7mm}.meta{display:grid;grid-template-columns:1fr 1fr 1.4fr;border:2px solid #000}.meta div{border:1px solid #000;text-align:center;min-height:11mm;padding:1mm}.meta .head{background:#bbb;min-height:5mm}.writer{border:2px solid #000;text-align:center}.ptable{width:100%;height:145mm;margin-top:5mm;table-layout:fixed}.ptable th,.ptable td{border:1.6px solid #000;padding:1px;font-size:10px;line-height:1.05}.ptable .item{width:32mm;text-align:left;font-size:11px}.ptable th{font-size:12px}.remarks td{height:25mm}.logo{position:absolute;right:8mm;bottom:2mm;max-width:30mm;max-height:15mm}
+.lubPage{page-break-after:always;width:200mm;min-height:287mm;box-sizing:border-box;padding:5mm;font-family:"Yu Gothic",sans-serif}
+.lubTitle{text-align:center;font-size:20px;margin-bottom:5mm}.lubInfo{display:flex;gap:10mm;margin-bottom:4mm}
+.lubPrintTable{width:100%;border-collapse:collapse;font-size:9px}.lubPrintTable th,.lubPrintTable td{border:1px solid #000;padding:2px;text-align:center}.lubPrintTable th{background:#eee}}
+</style></head><body><div class="wrap"><h1>掘進管理システム</h1>
+<div class="card"><select id="project"></select><input id="newProject" placeholder="新しい現場名"><button onclick="addProject()">現場を追加</button></div>
+<div class="tabs"><button onclick="show('input')">入力</button><button onclick="show('settings')">様式設定</button><button onclick="show('fields')">項目・単位設定</button><button onclick="show('lubricant')">滑材注入管理</button><button onclick="printAll()">一括印刷</button><button onclick="printDaily()">日報印刷</button><button onclick="printRange()">管No範囲印刷</button><button onclick="excel()">Excel出力</button><button onclick="backup()">現場バックアップ</button></div>
+<section id="input" class="card"><h2>データ入力</h2><input type="hidden" id="id"><div id="form" class="grid"></div><button class="primary" onclick="saveRecord()">保存</button><button onclick="clearForm()">新規</button></section>
+<section id="settings" class="card hide"><h2>印刷様式記入欄</h2><div class="grid">
+<label>帳票タイトル<input id="report_title"></label><label>工事名<input id="construction_name"></label><label>施工者<input id="contractor"></label><label>スパン名<input id="span_name"></label><label>管径<input id="pipe_diameter"></label><label>推進距離<input id="push_distance"></label><label>記入者<input id="writer"></label><label>右下ロゴ<input type="file" id="logoFile" accept="image/*"></label></div><button class="primary" onclick="saveSettings()">様式設定を保存</button></section>
+<section id="fields" class="card hide"><h2>項目名・単位・並び順</h2><div class="scroll"><table><thead><tr><th>順</th><th>項目名</th><th>単位</th><th>入力表示</th><th>印刷表示</th></tr></thead><tbody id="fieldRows"></tbody></table></div><button class="primary" onclick="saveFields()">項目設定を保存</button></section>
 
-/* ===== 印刷 A4横 ===== */
-@media print{
-  body>*:not(#printArea){display:none!important}
-  body{margin:0;background:#fff}
-  #printArea{display:block!important}
-  @page{size:A4 landscape;margin:5mm}
-  .print-page{
-    width:287mm;height:200mm;page-break-after:always;position:relative;
-    padding:3mm 4mm 3mm 4mm;background:#fff;overflow:hidden;
-    font-family:"Yu Mincho","MS Mincho",serif;color:#000;
-  }
-  .print-title{text-align:center;font-size:18pt;margin:0 0 4mm}
-  .print-head{display:grid;grid-template-columns:125mm 92mm 28mm;gap:5mm;align-items:start;margin-bottom:4mm}
-  .line-row{display:grid;grid-template-columns:18mm 1fr;align-items:end;margin:2mm 0;font-size:10pt}
-  .line-row b{font-weight:normal}.line-val{border-bottom:1.5px solid #000;min-height:6mm;padding:0 2mm;white-space:nowrap;overflow:hidden}
-  .info3{display:grid;grid-template-columns:1fr 1fr 1fr;border:1.6px solid #000}
-  .info3>div{border-right:1.4px solid #000}.info3>div:last-child{border-right:0}
-  .info3 .cap{background:#c8c8c8;border-bottom:1.4px solid #000;text-align:center;height:8mm;line-height:8mm;font-size:10pt}
-  .info3 .val{height:12mm;line-height:12mm;text-align:center;font-size:13pt;font-weight:bold;overflow:hidden}
-  .writer{border:1.6px solid #000}.writer .cap{background:#c8c8c8;border-bottom:1.4px solid #000;text-align:center;height:8mm;line-height:8mm}.writer .val{height:12mm;line-height:12mm;text-align:center;font-size:12pt}
-  .data-table{width:100%;border-collapse:collapse;table-layout:fixed;border:2px solid #000}
-  .data-table td,.data-table th{border:1.2px solid #000;padding:0;text-align:center;vertical-align:middle;color:#000}
-  .label-col{width:52mm;text-align:left!important;padding-left:3mm!important;font-size:9.2pt;height:6.4mm}
-  .data-table .unit{font-size:8pt;margin-left:2mm}
-  .data-table .data-cell{width:22.5mm;font-size:9pt;height:6.4mm}
-  .data-table .remarks-row td{height:23mm}
-  .remarks-label{text-align:left!important;padding-left:3mm!important;font-size:11pt}
-  .logo{position:absolute;right:6mm;bottom:2mm;max-width:36mm;max-height:14mm;object-fit:contain}
-  .no-logo{position:absolute;right:8mm;bottom:5mm;color:#cc3300;font-size:18pt;font-weight:bold;font-family:sans-serif}
-}
-</style>
-</head>
-<body>
-<h1>掘進管理システム</h1>
-<div class="card">
-  <h2>現場</h2>
-  <div class="grid"><div><label>現場選択</label><select id="projectSelect"></select></div><div><label>新規現場名</label><input id="newProjectName"></div><div style="align-self:end"><button onclick="addProject()">現場を追加</button></div></div>
-</div>
-
-<div class="card">
-  <h2>印刷様式記入欄</h2>
+<section id="lubricant" class="card hide"><h2>滑材注入管理</h2>
   <div class="grid">
-    <div><label>工事名</label><input id="construction_name"></div><div><label>施工者</label><input id="contractor"></div>
-    <div><label>スパン名</label><input id="span_name"></div><div><label>管径</label><input id="pipe_diameter"></div>
-    <div><label>推進距離</label><input id="push_distance"></div><div><label>記入者</label><input id="writer"></div>
-    <div><label>右下ロゴ画像</label><input type="file" id="logoFile" accept="image/*"></div>
+    <label>帳票タイトル<input id="lub_report_title" value="滑材注入管理表"></label>
+    <label>材料名<input id="lub_material_name" placeholder="例：ベントナイト、滑材A"></label>
   </div>
-  <div class="btns" style="margin-top:10px"><button onclick="saveSettings()">様式設定を保存</button><button onclick="printAll()">一括印刷</button></div>
-  <div class="small">※設定は現場ごとに保存され、印刷に反映されます。</div>
-</div>
-
-<div class="card">
-  <h2>掘進データ入力</h2>
-  <input type="hidden" id="editId">
+  <button class="primary" onclick="saveLubSettings()">滑材設定を保存</button>
+  <hr>
+  <h3>入力</h3><input type="hidden" id="lub_id">
   <div class="grid">
-    <div><label>推進管No.</label><input id="pipe_no" type="number"></div><div><label>日時</label><input id="date" type="datetime-local"></div>
-    <div><label>切羽土圧 Mpa</label><input id="kafuatsu" type="number" step="any"></div><div><label>送水圧 kg/cm2</label><input id="sousui" type="number" step="any"></div>
-    <div><label>排泥流量 m3/分</label><input id="hainyu_flow" type="number" step="any"></div><div><label>掘進速度 cm/分</label><input id="kusshin_speed" type="number" step="any"></div>
-    <div><label>元押し推力 kN</label><input id="motooshi_force" type="number" step="any"></div><div><label>カッタートルク A</label><input id="cutter_torque" type="number" step="any"></div>
-    <div><label>送泥P1ポンプ rpm</label><input id="souden_p1" type="number" step="any"></div><div><label>排泥P2ポンプ rpm</label><input id="haiden_p2" type="number" step="any"></div>
-    <div><label>排泥P3ポンプ</label><input id="haiden_p3" type="number" step="any"></div><div><label>排泥P4ポンプ</label><input id="haiden_p4" type="number" step="any"></div>
-    <div><label>ピッチング ±</label><input id="pitching" type="number" step="any"></div><div><label>ローリング ±</label><input id="rolling" type="number" step="any"></div>
-    <div><label>粘性 秒</label><input id="viscosity" type="number" step="any"></div><div><label>比重</label><input id="specific_gravity" type="number" step="any"></div>
-    <div><label>残土量 m3</label><input id="zando" type="number" step="any"></div>
-    <div><label>センター方向</label><select id="precision_center_direction"><option></option><option>右</option><option>左</option></select></div>
-    <div><label>センター mm</label><input id="precision_center_value" type="number" step="any"></div>
-    <div><label>レベル方向</label><select id="precision_level_direction"><option></option><option>上</option><option>下</option></select></div>
-    <div><label>レベル mm</label><input id="precision_level_value" type="number" step="any"></div>
-    <div style="grid-column:span 4"><label>特記事項</label><textarea id="remarks"></textarea></div>
+    <label>日時<input type="datetime-local" id="lub_date"></label>
+    <label>注入管No.<input id="lub_pipe_no"></label>
+    <label>注入量 ℓ<input type="number" step="0.01" id="lub_liter"></label>
+    <label><span id="lub_mat_label">材料</span> kg<input type="number" step="0.01" id="lub_material_kg"></label>
+    <label>搬入量 kg<input type="number" step="0.01" id="lub_carry_kg"></label>
+    <label>備考<input id="lub_remarks"></label>
   </div>
-  <div class="btns" style="margin-top:10px"><button onclick="saveRecord()">保存</button><button class="edit" onclick="clearForm()">新規入力へ戻る</button></div>
-</div>
+  <button class="primary" onclick="saveLubRecord()">滑材データ保存</button><button onclick="clearLubForm()">新規</button>
+  <button onclick="printLubricant()">滑材表印刷</button><button onclick="lubExcel()">滑材Excel出力</button>
+  <div class="scroll"><table><thead><tr><th>日時</th><th>注入管No.</th><th>注入量ℓ</th><th>日注入累計ℓ</th><th>全体注入累計ℓ</th><th>材料kg</th><th>日材料累計kg</th><th>材料累計kg</th><th>搬入量kg</th><th>総搬入量kg</th><th>残数量kg</th><th>備考</th><th>操作</th></tr></thead><tbody id="lubRows"></tbody></table></div>
+</section>
 
-<div class="card">
-  <h2>一覧</h2>
-  <table id="list"></table>
-</div>
-
-<div id="printArea"></div>
-
+<div class="card scroll"><h2>一覧</h2><table><thead id="thead"></thead><tbody id="tbody"></tbody></table></div></div><div id="printArea" class="printArea"></div>
 <script>
-let projects=[], currentProjectId=1, records=[], settings={}, logoData='';
+let projects=[],pid,records=[],settings={},fields=[],logo='';
+const baseFields=['pipe_no','date','kafuatsu','sousui','hainyu_flow','kusshin_speed','motooshi_force','cutter_torque','souden_p1','haiden_p2','haiden_p3','haiden_p4','pitching','rolling','viscosity','specific_gravity','zando','precision_center','precision_level','remarks'];
+const $=id=>document.getElementById(id); const api=(u,o)=>fetch(u,o).then(r=>r.json());
+function show(id){['input','settings','fields'].forEach(x=>$(x).classList.toggle('hide',x!==id))}
+async function init(){projects=await api('/api/projects'); $('project').innerHTML=projects.map(p=>`<option value="${p.id}">${p.name}</option>`).join(''); pid=$('project').value; $('project').onchange=()=>{pid=$('project').value;loadAll()}; await loadAll()}
+async function addProject(){let name=$('newProject').value.trim(); if(!name)return alert('現場名を入力'); let p=await api('/api/projects',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name})}); $('newProject').value=''; await init(); $('project').value=p.id; pid=p.id; await loadAll()}
+async function loadAll(){settings=await api('/api/settings/'+pid); logo=settings.logo_data||''; fields=await api('/api/fields/'+pid); records=await api('/api/records/'+pid); fillSettings(); renderForm(); renderFields(); renderTable(); clearForm(false)}
+function field(k){return fields.find(f=>f.field_key===k)||{label:k,unit:'',visible:1,print_visible:1}}
+function label(k){let f=field(k);return f.label+(f.unit?'（'+f.unit+'）':'')}
+function fillSettings(){['report_title','construction_name','contractor','span_name','pipe_diameter','push_distance','writer'].forEach(k=>$(k).value=settings[k]||''); if(!$('report_title').value)$('report_title').value='泥水式推進工データー表'}
+function renderForm(){let html=''; fields.filter(f=>f.visible).forEach(f=>{let k=f.field_key;if(k==='date')html+=`<label>${label(k)}<input id="${k}" type="datetime-local"></label>`;else if(k==='remarks')html+=`<label>${label(k)}<textarea id="${k}"></textarea></label>`;else if(k==='precision_center'||k==='precision_level'){html+=`<label>${label(k)}<div><select id="${k}_direction"><option></option><option>右</option><option>左</option><option>上</option><option>下</option></select><input id="${k}_value" type="number" step="0.01"></div></label>`}else html+=`<label>${label(k)}<input id="${k}" type="${k==='pipe_no'?'number':'number'}" step="0.01"></label>`});$('form').innerHTML=html}
+function renderFields(){ $('fieldRows').innerHTML=fields.map(f=>`<tr data-key="${f.field_key}"><td><input value="${f.sort_order}" type="number" style="width:60px"></td><td><input value="${f.label}"></td><td><input value="${f.unit||''}"></td><td><input type="checkbox" ${f.visible?'checked':''}></td><td><input type="checkbox" ${f.print_visible?'checked':''}></td></tr>`).join('')}
+async function saveFields(){let arr=[...document.querySelectorAll('#fieldRows tr')].map(tr=>{let i=tr.querySelectorAll('input');return{field_key:tr.dataset.key,sort_order:i[0].value,label:i[1].value,unit:i[2].value,visible:i[3].checked,print_visible:i[4].checked}}); await api('/api/fields/'+pid,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fields:arr})}); await loadAll(); alert('保存しました')}
+async function saveSettings(){let data={}; ['report_title','construction_name','contractor','span_name','pipe_diameter','push_distance','writer'].forEach(k=>data[k]=$(k).value); data.logo_data=logo; await api('/api/settings/'+pid,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)}); await loadAll(); alert('保存しました')}
+$('logoFile').onchange=e=>{let f=e.target.files[0]; if(!f)return; let r=new FileReader(); r.onload=()=>logo=r.result; r.readAsDataURL(f)}
+async function clearForm(getNext=true){$('id').value=''; if($('date'))$('date').value=new Date(Date.now()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,16); if(getNext&&$('pipe_no')){let n=await api('/api/records/'+pid+'/next-pipe-no');$('pipe_no').value=n.next} ['remarks'].forEach(k=>$(k)&&($(k).value=''))}
+function collect(){let d={}; baseFields.forEach(k=>{if(k==='precision_center'||k==='precision_level'){d[k+'_direction']=$(k+'_direction')?.value||''; d[k+'_value']=$(k+'_value')?.value||''}else d[k]=$(k)?.value??''}); return d}
+async function saveRecord(){let id=$('id').value, opt={method:id?'PUT':'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(collect())}; await api('/api/records/'+pid+(id?'/'+id:''),opt); await loadAll()}
+function edit(r){$('id').value=r.id; baseFields.forEach(k=>{if(k==='precision_center'||k==='precision_level'){let d=$(k+'_direction'),v=$(k+'_value'); if(d)d.value=r[k+'_direction']||''; if(v)v.value=r[k+'_value']??''}else if($(k))$(k).value=(r[k]??'')}) ; scrollTo(0,0)}
+async function del(id){if(confirm('削除しますか')){await api('/api/records/'+pid+'/'+id,{method:'DELETE'});loadAll()}}
+function val(r,k){if(k==='precision_center'||k==='precision_level')return (r[k+'_direction']||'')+(r[k+'_value']??''); if(k==='date')return fmt(r.date); return r[k]??''}
+function fmt(d){if(!d)return''; return String(d).replace('T',' ').slice(0,16).replaceAll('-','/')}
+function renderTable(){let fs=fields.filter(f=>f.visible); $('thead').innerHTML='<tr>'+fs.map(f=>`<th>${label(f.field_key)}</th>`).join('')+'<th>操作</th></tr>'; $('tbody').innerHTML=records.map(r=>'<tr>'+fs.map(f=>`<td>${val(r,f.field_key)}</td>`).join('')+`<td><button onclick='edit(${JSON.stringify(r)})'>編集</button><button onclick='del(${r.id})'>削除</button></td></tr>`).join('')}
+function filtered(mode){if(mode==='daily'){let d=prompt('印刷する日付を入力（例 2026/06/02）'); if(!d)return[]; d=d.replaceAll('-','/'); return records.filter(r=>fmt(r.date).startsWith(d))} if(mode==='range'){let a=Number(prompt('開始 推進管No.')),b=Number(prompt('終了 推進管No.')); return records.filter(r=>Number(r.pipe_no)>=a&&Number(r.pipe_no)<=b)} return records}
+function printAll(){makePrint(records)} function printDaily(){makePrint(filtered('daily'))} function printRange(){makePrint(filtered('range'))}
+function makePrint(rows){let fs=fields.filter(f=>f.print_visible); let chunks=[]; for(let i=0;i<rows.length;i+=10)chunks.push(rows.slice(i,i+10)); if(!chunks.length)return alert('印刷データなし'); $('printArea').innerHTML=chunks.map(chunk=>page(chunk,fs)).join(''); setTimeout(()=>print(),100)}
+function page(rows,fs){return `<div class="page"><div class="ptitle">${settings.report_title||'泥水式推進工データー表'}</div><div class="top"><div><div>工事名 <span class="line">${settings.construction_name||''}</span></div><div>施工者 <span class="line">${settings.contractor||''}</span></div></div><div class="meta"><div class="head">スパン名</div><div class="head">管径</div><div class="head">推進距離</div><div>${settings.span_name||''}</div><div>${settings.pipe_diameter||''}</div><div>${settings.push_distance||''}</div></div><div class="writer"><div style="background:#bbb">記入者</div><div>${settings.writer||''}</div></div></div><table class="ptable"><tr><th class="item">項目</th>${rows.map(r=>`<th>${r.pipe_no||''}</th>`).join('')}${'<th></th>'.repeat(10-rows.length)}</tr>${fs.filter(f=>f.field_key!=='pipe_no').map(f=>`<tr class="${f.field_key==='remarks'?'remarks':''}"><td class="item">${f.label}${f.unit?'　'+f.unit:''}</td>${rows.map(r=>`<td>${val(r,f.field_key)}</td>`).join('')}${'<td></td>'.repeat(10-rows.length)}</tr>`).join('')}</table>${logo?`<img class="logo" src="${logo}">`:''}</div>`}
+function excel(){location.href='/api/export/excel/'+pid} function backup(){location.href='/api/backup/'+pid}
 
-const ids=['pipe_no','date','kafuatsu','sousui','hainyu_flow','kusshin_speed','motooshi_force','cutter_torque','souden_p1','haiden_p2','haiden_p3','haiden_p4','pitching','rolling','viscosity','specific_gravity','zando','precision_center_direction','precision_center_value','precision_level_direction','precision_level_value','remarks'];
-const settingIds=['construction_name','contractor','span_name','pipe_diameter','push_distance','writer'];
+// ---- 滑材注入管理 ----
+let lubSettings={}, lubRecords=[];
+function sumFmt(v){return (v==null||v==='')?'':Number(v).toFixed(2).replace(/\.00$/,'')}
+async function loadLubricant(){
+  if(!pid)return;
+  lubSettings=await api('/api/lubricant/settings/'+pid);
+  lubRecords=await api('/api/lubricant/records/'+pid);
+  $('lub_report_title').value=lubSettings.report_title||'滑材注入管理表';
+  $('lub_material_name').value=lubSettings.material_name||'滑材';
+  $('lub_mat_label').textContent=lubSettings.material_name||'材料';
+  renderLubRows(); clearLubForm(false);
+}
+async function saveLubSettings(){
+  await api('/api/lubricant/settings/'+pid,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({report_title:$('lub_report_title').value,material_name:$('lub_material_name').value})});
+  await loadLubricant(); alert('滑材設定を保存しました');
+}
+function clearLubForm(setDate=true){$('lub_id').value=''; if(setDate!==false)$('lub_date').value=new Date(Date.now()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,16); ['lub_pipe_no','lub_liter','lub_material_kg','lub_carry_kg','lub_remarks'].forEach(id=>$(id).value='')}
+function collectLub(){return {date:$('lub_date').value,injection_pipe_no:$('lub_pipe_no').value,injection_liter:$('lub_liter').value,material_kg:$('lub_material_kg').value,carry_in_kg:$('lub_carry_kg').value,remarks:$('lub_remarks').value}}
+async function saveLubRecord(){let id=$('lub_id').value; await api('/api/lubricant/records/'+pid+(id?'/'+id:''),{method:id?'PUT':'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(collectLub())}); await loadLubricant();}
+function editLub(r){$('lub_id').value=r.id;$('lub_date').value=(r.date||'').slice(0,16);$('lub_pipe_no').value=r.injection_pipe_no||'';$('lub_liter').value=r.injection_liter??'';$('lub_material_kg').value=r.material_kg??'';$('lub_carry_kg').value=r.carry_in_kg??'';$('lub_remarks').value=r.remarks||'';scrollTo(0,0)}
+async function delLub(id){if(confirm('削除しますか')){await api('/api/lubricant/records/'+pid+'/'+id,{method:'DELETE'});await loadLubricant()}}
+function renderLubRows(){if(!$('lubRows'))return; $('lubRows').innerHTML=lubRecords.map(r=>`<tr><td>${fmt(r.date)}</td><td>${r.injection_pipe_no||''}</td><td>${sumFmt(r.injection_liter)}</td><td>${sumFmt(r.day_injection_cum)}</td><td>${sumFmt(r.total_injection_cum)}</td><td>${sumFmt(r.material_kg)}</td><td>${sumFmt(r.day_material_cum)}</td><td>${sumFmt(r.total_material_cum)}</td><td>${sumFmt(r.carry_in_kg)}</td><td>${sumFmt(r.total_carry_in_cum)}</td><td>${sumFmt(r.remaining_kg)}</td><td>${r.remarks||''}</td><td><button onclick='editLub(${JSON.stringify(r)})'>編集</button><button onclick='delLub(${r.id})'>削除</button></td></tr>`).join('')}
+function printLubricant(){ if(!lubRecords.length)return alert('滑材データなし'); let chunks=[]; for(let i=0;i<lubRecords.length;i+=28)chunks.push(lubRecords.slice(i,i+28)); $('printArea').innerHTML=chunks.map(ch=>`<div class="lubPage"><div class="lubTitle">${lubSettings.report_title||'滑材注入管理表'}</div><div class="lubInfo"><div>現場：${$('project').selectedOptions[0]?.textContent||''}</div><div>材料名：${lubSettings.material_name||''}</div></div><table class="lubPrintTable"><tr><th>日時</th><th>注入管No.</th><th>注入量ℓ</th><th>日注入累計ℓ</th><th>全体注入累計ℓ</th><th>${lubSettings.material_name||'材料'}kg</th><th>日材料累計kg</th><th>材料累計kg</th><th>搬入量kg</th><th>総搬入量kg</th><th>残数量kg</th><th>備考</th></tr>${ch.map(r=>`<tr><td>${fmt(r.date)}</td><td>${r.injection_pipe_no||''}</td><td>${sumFmt(r.injection_liter)}</td><td>${sumFmt(r.day_injection_cum)}</td><td>${sumFmt(r.total_injection_cum)}</td><td>${sumFmt(r.material_kg)}</td><td>${sumFmt(r.day_material_cum)}</td><td>${sumFmt(r.total_material_cum)}</td><td>${sumFmt(r.carry_in_kg)}</td><td>${sumFmt(r.total_carry_in_cum)}</td><td>${sumFmt(r.remaining_kg)}</td><td>${r.remarks||''}</td></tr>`).join('')}</table></div>`).join(''); setTimeout(()=>print(),100)}
+function lubExcel(){location.href='/api/lubricant/export/excel/'+pid}
 
-function v(id){return document.getElementById(id).value}
-function setv(id,val){document.getElementById(id).value = val ?? ''}
-function fmtDateTime(s){
-  if(!s) return '';
-  const d = new Date(s);
-  if(isNaN(d)) return String(s).replace('T',' ').slice(0,16);
-  const pad=n=>String(n).padStart(2,'0');
-  return `${d.getFullYear()}/${pad(d.getMonth()+1)}/${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
-}
-function val(x){return x===null||x===undefined?'':x}
-function precision(dir,num){return (dir||'') + (num!==null&&num!==undefined&&num!=='' ? String(num) : '')}
-
-async function loadProjects(){
-  projects = await (await fetch('/api/projects')).json();
-  const sel=document.getElementById('projectSelect');
-  sel.innerHTML=projects.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
-  if(projects[0] && !projects.some(p=>p.id==currentProjectId)) currentProjectId=projects[0].id;
-  sel.value=currentProjectId;
-  sel.onchange=()=>{currentProjectId=Number(sel.value); loadAll();}
-}
-async function addProject(){
-  const name=v('newProjectName').trim();
-  if(!name){alert('現場名を入力してください');return}
-  const r=await fetch('/api/projects',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name})});
-  const data=await r.json(); if(data.error){alert(data.error);return}
-  currentProjectId=data.id; setv('newProjectName',''); await loadProjects(); await loadAll();
-}
-async function loadSettings(){
-  settings = await (await fetch('/api/settings/'+currentProjectId)).json();
-  settingIds.forEach(id=>setv(id, settings[id]||''));
-  logoData=settings.logo_data||'';
-}
-async function saveSettings(){
-  const body={}; settingIds.forEach(id=>body[id]=v(id)); body.logo_data=logoData;
-  const r=await fetch('/api/settings/'+currentProjectId,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
-  const data=await r.json(); if(data.error){alert(data.error);return}
-  await loadSettings(); alert('様式設定を保存しました');
-}
-document.getElementById('logoFile').addEventListener('change', e=>{
-  const f=e.target.files[0]; if(!f) return;
-  const reader=new FileReader(); reader.onload=()=>{logoData=reader.result;}; reader.readAsDataURL(f);
-});
-async function loadRecords(){
-  records = await (await fetch('/api/records?project_id='+currentProjectId)).json();
-  renderList();
-}
-async function nextPipeNo(){
-  const d=await (await fetch('/api/records/next-pipe-no/'+currentProjectId)).json();
-  setv('pipe_no', d.next_no||1);
-}
-function formBody(){ const b={project_id:currentProjectId}; ids.forEach(id=>b[id]=v(id)); return b; }
-async function saveRecord(){
-  const id=v('editId'), method=id?'PUT':'POST', url=id?'/api/records/'+id:'/api/records';
-  const r=await fetch(url,{method,headers:{'Content-Type':'application/json'},body:JSON.stringify(formBody())});
-  const data=await r.json(); if(data.error){alert(data.error);return}
-  clearForm(); await loadRecords(); await nextPipeNo();
-}
-function editRecord(id){
-  const r=records.find(x=>x.id==id); if(!r) return;
-  setv('editId',r.id); ids.forEach(k=>setv(k,r[k]));
-}
-async function delRecord(id){
-  if(!confirm('削除しますか？')) return;
-  await fetch('/api/records/'+id,{method:'DELETE'}); await loadRecords(); await nextPipeNo();
-}
-function clearForm(){
-  setv('editId',''); ids.forEach(id=>setv(id,'')); 
-  const now=new Date(), pad=n=>String(n).padStart(2,'0');
-  setv('date', `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`);
-  nextPipeNo();
-}
-function renderList(){
-  const heads=['推進管No','日時','切羽土圧','送水圧','排泥流量','掘進速度','元押し推力','残土量','操作'];
-  document.getElementById('list').innerHTML = `<tr>${heads.map(h=>`<th>${h}</th>`).join('')}</tr>` + records.map(r=>`
-    <tr><td>${val(r.pipe_no)}</td><td>${fmtDateTime(r.date)}</td><td>${val(r.kafuatsu)}</td><td>${val(r.sousui)}</td><td>${val(r.hainyu_flow)}</td><td>${val(r.kusshin_speed)}</td><td>${val(r.motooshi_force)}</td><td>${val(r.zando)}</td>
-    <td><button class="edit" onclick="editRecord(${r.id})">編集</button> <button class="danger" onclick="delRecord(${r.id})">削除</button></td></tr>`).join('');
-}
-function row(label, unit, key, rows){
-  return `<tr><td class="label-col">${label}${unit?` <span class="unit">${unit}</span>`:''}</td>${rows.map(r=>`<td class="data-cell">${key(r)}</td>`).join('')}</tr>`;
-}
-function printAll(){
-  const pages=[]; const sorted=[...records].sort((a,b)=>String(a.date).localeCompare(String(b.date)) || (a.pipe_no||0)-(b.pipe_no||0));
-  for(let i=0;i<Math.max(sorted.length,1);i+=10){
-    const chunk=sorted.slice(i,i+10);
-    while(chunk.length<10) chunk.push({});
-    pages.push(`<section class="print-page">
-      <h1 class="print-title">泥水式推進工データー表</h1>
-      <div class="print-head">
-        <div>
-          <div class="line-row"><b>工事名</b><div class="line-val">${v('construction_name')}</div></div>
-          <div class="line-row"><b>施工者</b><div class="line-val">${v('contractor')}</div></div>
-        </div>
-        <div class="info3">
-          <div><div class="cap">スパン名</div><div class="val">${v('span_name')}</div></div>
-          <div><div class="cap">管径</div><div class="val">${v('pipe_diameter')}</div></div>
-          <div><div class="cap">推進距離</div><div class="val">${v('push_distance')}</div></div>
-        </div>
-        <div class="writer"><div class="cap">記入者</div><div class="val">${v('writer')}</div></div>
-      </div>
-      <table class="data-table">
-        ${row('推進管　No','', r=>val(r.pipe_no), chunk)}
-        ${row('日　付','', r=>fmtDateTime(r.date), chunk)}
-        ${row('切羽土圧','Mpa', r=>val(r.kafuatsu), chunk)}
-        ${row('送水圧','kg/cm2', r=>val(r.sousui), chunk)}
-        ${row('排泥流量','m3/分', r=>val(r.hainyu_flow), chunk)}
-        ${row('掘進速度','cm/分', r=>val(r.kusshin_speed), chunk)}
-        ${row('元押し推力','kN', r=>val(r.motooshi_force), chunk)}
-        ${row('カッタートルク','A', r=>val(r.cutter_torque), chunk)}
-        ${row('送泥P1ポンプ','rpm', r=>val(r.souden_p1), chunk)}
-        ${row('排泥P2ポンプ','rpm', r=>val(r.haiden_p2), chunk)}
-        ${row('排泥P3ポンプ','', r=>val(r.haiden_p3), chunk)}
-        ${row('排泥P4ポンプ','', r=>val(r.haiden_p4), chunk)}
-        ${row('ピッチング','±', r=>val(r.pitching), chunk)}
-        ${row('ローリング','±', r=>val(r.rolling), chunk)}
-        ${row('粘性','秒', r=>val(r.viscosity), chunk)}
-        ${row('比重','', r=>val(r.specific_gravity), chunk)}
-        ${row('残土量','m3', r=>val(r.zando), chunk)}
-        ${row('推進精度 センター','(mm)', r=>precision(r.precision_center_direction,r.precision_center_value), chunk)}
-        ${row('推進精度 レベル','(mm)', r=>precision(r.precision_level_direction,r.precision_level_value), chunk)}
-        <tr class="remarks-row"><td class="remarks-label">特記事項</td>${chunk.map(r=>`<td>${val(r.remarks)}</td>`).join('')}</tr>
-      </table>
-      ${logoData?`<img class="logo" src="${logoData}">`:`<div class="no-logo">DAIEI</div>`}
-    </section>`);
-  }
-  document.getElementById('printArea').innerHTML=pages.join('');
-  setTimeout(()=>window.print(),100);
-}
-async function loadAll(){ await loadSettings(); await loadRecords(); clearForm(); }
-(async()=>{ await loadProjects(); await loadAll(); })();
-</script>
-</body>
-</html>
+const _oldLoadAll=loadAll; loadAll=async function(){ await _oldLoadAll(); await loadLubricant(); };
+init();
+</script></body></html>

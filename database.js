@@ -1,10 +1,16 @@
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
+
 const db = new sqlite3.Database(path.join(__dirname, 'suishin.db'));
 
-function addColumn(table, name, definition) {
-  db.all(`PRAGMA table_info(${table})`, [], (err, columns) => {
-    if (!err && !columns.map(c => c.name).includes(name)) db.run(`ALTER TABLE ${table} ADD COLUMN ${name} ${definition}`);
+function addColumn(table, column, definition) {
+  db.all(`PRAGMA table_info(${table})`, (err, cols) => {
+    if (err) return console.error(err.message);
+    if (!cols.some(c => c.name === column)) {
+      db.run(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`, e => {
+        if (e) console.error(`ALTER ${table}.${column}:`, e.message);
+      });
+    }
   });
 }
 
@@ -13,17 +19,22 @@ db.serialize(() => {
     CREATE TABLE IF NOT EXISTS projects (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL,
-      client TEXT,
-      location TEXT,
+      created_at TEXT DEFAULT (datetime('now','localtime')),
+      updated_at TEXT DEFAULT (datetime('now','localtime'))
+    )
+  `);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS print_settings (
+      project_id INTEGER PRIMARY KEY,
       construction_name TEXT,
       contractor TEXT,
       span_name TEXT,
       pipe_diameter TEXT,
-      drive_distance TEXT,
+      jacking_distance TEXT,
       writer TEXT,
       logo_data TEXT,
-      created_at TEXT DEFAULT (datetime('now', 'localtime')),
-      updated_at TEXT DEFAULT (datetime('now', 'localtime'))
+      updated_at TEXT DEFAULT (datetime('now','localtime'))
     )
   `);
 
@@ -31,10 +42,9 @@ db.serialize(() => {
     CREATE TABLE IF NOT EXISTS records (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       project_id INTEGER DEFAULT 1,
-      date TEXT NOT NULL,
       pipe_no INTEGER,
-      ring_no TEXT,
-      kafuatsu REAL,
+      date TEXT NOT NULL,
+      face_earth_pressure REAL,
       sousui REAL,
       hainyu_flow REAL,
       kusshin_speed REAL,
@@ -55,22 +65,44 @@ db.serialize(() => {
       precision_level_value REAL,
       remarks TEXT,
       created_at TEXT DEFAULT (datetime('now', 'localtime')),
-      updated_at TEXT DEFAULT (datetime('now', 'localtime')),
-      FOREIGN KEY(project_id) REFERENCES projects(id)
+      updated_at TEXT DEFAULT (datetime('now', 'localtime'))
     )
   `);
 
-  ['construction_name','contractor','span_name','pipe_diameter','drive_distance','writer','logo_data'].forEach(c => addColumn('projects', c, 'TEXT'));
-  addColumn('records', 'project_id', 'INTEGER DEFAULT 1');
-  addColumn('records', 'ring_no', 'TEXT');
-  addColumn('records', 'pipe_no', 'INTEGER');
+  db.get('SELECT COUNT(*) AS cnt FROM projects', (err, row) => {
+    if (!err && row.cnt === 0) db.run('INSERT INTO projects (name) VALUES (?)', ['第1現場']);
+  });
 
-  db.get(`SELECT COUNT(*) AS count FROM projects`, [], (err, row) => {
-    if (!err && row.count === 0) {
-      db.run(`INSERT INTO projects (name, client, location, construction_name, contractor, span_name, pipe_diameter, drive_distance, writer)
-              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        ['サンプル現場', '北海道開発局', '', '', '', '', '', '', '']);
+  // 旧DBからの移行用
+  addColumn('records','project_id','INTEGER DEFAULT 1');
+  addColumn('records','pipe_no','INTEGER');
+  addColumn('records','face_earth_pressure','REAL');
+  addColumn('records','sousui','REAL');
+  addColumn('records','hainyu_flow','REAL');
+  addColumn('records','kusshin_speed','REAL');
+  addColumn('records','motooshi_force','REAL');
+  addColumn('records','cutter_torque','REAL');
+  addColumn('records','souden_p1','REAL');
+  addColumn('records','haiden_p2','REAL');
+  addColumn('records','haiden_p3','REAL');
+  addColumn('records','haiden_p4','REAL');
+  addColumn('records','pitching','REAL');
+  addColumn('records','rolling','REAL');
+  addColumn('records','viscosity','REAL');
+  addColumn('records','specific_gravity','REAL');
+  addColumn('records','zando','REAL');
+  addColumn('records','precision_center_direction','TEXT');
+  addColumn('records','precision_center_value','REAL');
+  addColumn('records','precision_level_direction','TEXT');
+  addColumn('records','precision_level_value','REAL');
+  addColumn('records','remarks','TEXT');
+
+  // 旧項目 kafuatsu がある場合、切羽土圧へコピー
+  db.all(`PRAGMA table_info(records)`, (err, cols) => {
+    if (!err && cols.some(c => c.name === 'kafuatsu')) {
+      db.run(`UPDATE records SET face_earth_pressure = COALESCE(face_earth_pressure, kafuatsu)`);
     }
   });
 });
+
 module.exports = db;

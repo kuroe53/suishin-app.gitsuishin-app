@@ -29,7 +29,7 @@ async function loadAll(){settings=await api('/api/settings/'+pid()); records=awa
 function fs(){return (settings.fields||[]).slice().sort((a,b)=>(+a.order)-(+b.order))}
 function val(v){return v==null?'':v} function dateOnly(x){return x?x.replaceAll('-','/').slice(0,10):''} function dt(x){return x?x.replace('T',' ').replaceAll('-','/').slice(0,16):''}
 function renderForm(){let h=''; fs().filter(f=>f.show).forEach(f=>{h+=`<div><label>${f.label}${f.unit?'（'+f.unit+'）':''}</label>${f.key==='remarks'?`<textarea id="${f.key}"></textarea>`:`<input id="${f.key}" type="number" step="0.01">`}</div>`}); $('fieldInputs').innerHTML=h;}
-function renderRecords(){let fields=fs().filter(f=>f.show); let arr=records.slice().sort((a,b)=>{let av=a[sortKey],bv=b[sortKey]; if(!isNaN(Number(av))&&!isNaN(Number(bv))){av=Number(av)||0;bv=Number(bv)||0} return (av>bv?1:av<bv?-1:0)*(sortAsc?1:-1)}); let h='<tr><th onclick="sortBy(\\'pipe_no\\')">推進管No.</th><th onclick="sortBy(\\'datetime\\')">日時</th>'+fields.map(f=>`<th onclick="sortBy('${f.key}')">${f.label}</th>`).join('')+'<th>操作</th></tr>'; arr.forEach(r=>{h+=`<tr><td>${val(r.pipe_no)}</td><td>${dt(r.datetime)}</td>`+fields.map(f=>`<td>${val(r[f.key])}</td>`).join('')+`<td><button onclick="editRecord(${r.id})">編集</button><button class="danger" onclick="delRecord(${r.id})">削除</button></td></tr>`}); $('recordTable').innerHTML=h;}
+function renderRecords(){let fields=fs().filter(f=>f.show); let arr=records.slice().sort((a,b)=>{let av=a[sortKey],bv=b[sortKey]; if(!isNaN(Number(av))&&!isNaN(Number(bv))){av=Number(av)||0;bv=Number(bv)||0} return (av>bv?1:av<bv?-1:0)*(sortAsc?1:-1)}); let h='<tr><th onclick="sortBy(\'pipe_no\')">推進管No.</th><th onclick="sortBy(\'datetime\')">日時</th>'+fields.map(f=>`<th onclick="sortBy('${f.key}')">${f.label}</th>`).join('')+'<th>操作</th></tr>'; arr.forEach(r=>{h+=`<tr><td>${val(r.pipe_no)}</td><td>${dt(r.datetime)}</td>`+fields.map(f=>`<td>${val(r[f.key])}</td>`).join('')+`<td><button onclick="editRecord(${r.id})">編集</button><button class="danger" onclick="delRecord(${r.id})">削除</button></td></tr>`}); $('recordTable').innerHTML=h;}
 function sortBy(k){sortAsc=sortKey===k?!sortAsc:true; sortKey=k; renderRecords();}
 async function clearRecord(){$('rid').value=''; let nx=await api('/api/next-pipe/'+pid()); $('pipe_no').value=nx.next; $('datetime').value=new Date(Date.now()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,16); fs().forEach(f=>{let e=$(f.key); if(e)e.value=''});}
 function editRecord(id){let r=records.find(x=>x.id==id); if(!r)return; $('rid').value=r.id;$('pipe_no').value=val(r.pipe_no);$('datetime').value=(r.datetime||'').slice(0,16);fs().forEach(f=>{let e=$(f.key); if(e)e.value=val(r[f.key])});scrollTo(0,0)}
@@ -53,7 +53,36 @@ $('gy').addEventListener('change',buildColorInputs);
 function selectedY(){return [...$('gy').selectedOptions].map(o=>o.value)}
 function colorFor(k,i){let e=$('color_'+k); return e?e.value:['#e53935','#1e88e5','#43a047','#fb8c00','#8e24aa'][i%5]}
 function buildColorInputs(){let h=''; selectedY().forEach((k,i)=>{let f=fs().find(x=>x.key===k); h+=`<label>${f?f.label:k} 色</label><input class="colorbox" type="color" id="color_${k}" value="${colorFor(k,i)}">`}); $('gcolors').innerHTML=h||'<span class="small">表示値を選択すると色を指定できます。</span>'}
-function drawGraph(){let svg=$('chart'), W=1100,H=520, m={l:70,r:25,t:35,b:70}; svg.innerHTML=''; let ys=selectedY(); if(!ys.length){svg.innerHTML='<text x="30" y="50">表示する値を選択してください</text>'; return} let data=records.slice().sort((a,b)=>$('gx').value==='pipe_no'?(+a.pipe_no)-(+b.pipe_no):(a.datetime||'').localeCompare(b.datetime||'')); let vals=[]; ys.forEach(k=>data.forEach(r=>{let v=Number(r[k]); if(!isNaN(v))vals.push(v)})); let ymin=Math.min(0,...vals), ymax=Math.max(1,...vals); let x=(i)=>m.l+(data.length<=1?0:i*(W-m.l-m.r)/(data.length-1)); let y=(v)=>H-m.b-(v-ymin)*(H-m.t-m.b)/(ymax-ymin); function line(x1,y1,x2,y2,c,w=1){svg.innerHTML+=`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${c}" stroke-width="${w}"/>`} line(m.l,m.t,m.l,H-m.b,'#333'); line(m.l,H-m.b,W-m.r,H-m.b,'#333'); for(let i=0;i<=5;i++){let vv=ymin+(ymax-ymin)*i/5, yy=y(vv); line(m.l,yy,W-m.r,yy,'#ddd'); svg.innerHTML+=`<text x="8" y="${yy+4}" font-size="12">${vv.toFixed(1)}</text>`} data.forEach((r,i)=>{if(i%Math.ceil(data.length/12||1)===0){let tx=$('gx').value==='pipe_no'?r.pipe_no:dateOnly(r.datetime); svg.innerHTML+=`<text x="${x(i)-20}" y="${H-35}" font-size="11" transform="rotate(35 ${x(i)-20},${H-35})">${tx}</text>`}}); ys.forEach((k,idx)=>{let pts=data.map((r,i)=>({x:x(i),y:y(Number(r[k])),v:Number(r[k])})).filter(p=>!isNaN(p.v)); let c=colorFor(k,idx); for(let i=1;i<pts.length;i++)line(pts[i-1].x,pts[i-1].y,pts[i].x,pts[i].y,c,2); pts.forEach(p=>svg.innerHTML+=`<circle cx="${p.x}" cy="${p.y}" r="3" fill="${c}"/>`); let f=fs().find(x=>x.key===k); svg.innerHTML+=`<rect x="${W-190}" y="${20+idx*22}" width="12" height="12" fill="${c}"/><text x="${W-172}" y="${31+idx*22}" font-size="13">${f?f.label:k}</text>`}); svg.innerHTML+=`<text x="${W/2-60}" y="22" font-size="16">掘進データグラフ</text><text x="12" y="18" font-size="12">縦軸：選択値</text>`}
+function drawGraph(){
+  const svg=$('chart'), W=1100,H=520, m={l:70,r:25,t:35,b:70};
+  const ys=selectedY();
+  if(!ys.length){svg.innerHTML='<text x="30" y="50">表示する値を選択してください</text>'; return}
+  const data=records.slice().sort((a,b)=>$('gx').value==='pipe_no'?(Number(a.pipe_no)||0)-(Number(b.pipe_no)||0):(a.datetime||'').localeCompare(b.datetime||''));
+  if(!data.length){svg.innerHTML='<text x="30" y="50">データがありません</text>'; return}
+  const vals=[];
+  ys.forEach(k=>data.forEach(r=>{const v=Number(r[k]); if(Number.isFinite(v)) vals.push(v)}));
+  if(!vals.length){svg.innerHTML='<text x="30" y="50">選択項目に数値データがありません</text>'; return}
+  let ymin=Math.min(0,...vals), ymax=Math.max(1,...vals);
+  if(ymin===ymax){ymin-=1; ymax+=1;}
+  const x=i=>m.l+(data.length<=1?0:i*(W-m.l-m.r)/(data.length-1));
+  const y=v=>H-m.b-(v-ymin)*(H-m.t-m.b)/(ymax-ymin);
+  const out=[];
+  const line=(x1,y1,x2,y2,c,w=1)=>out.push(`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${c}" stroke-width="${w}"/>`);
+  line(m.l,m.t,m.l,H-m.b,'#333'); line(m.l,H-m.b,W-m.r,H-m.b,'#333');
+  for(let i=0;i<=5;i++){const vv=ymin+(ymax-ymin)*i/5, yy=y(vv); line(m.l,yy,W-m.r,yy,'#ddd'); out.push(`<text x="8" y="${yy+4}" font-size="12">${vv.toFixed(1)}</text>`)}
+  const step=Math.max(1,Math.ceil(data.length/12));
+  data.forEach((r,i)=>{if(i%step===0){const tx=$('gx').value==='pipe_no'?val(r.pipe_no):dateOnly(r.datetime); out.push(`<text x="${x(i)-20}" y="${H-35}" font-size="11" transform="rotate(35 ${x(i)-20},${H-35})">${tx}</text>`)}});
+  ys.forEach((k,idx)=>{
+    const pts=data.map((r,i)=>({x:x(i),y:y(Number(r[k])),v:Number(r[k])})).filter(p=>Number.isFinite(p.v));
+    const c=colorFor(k,idx);
+    for(let i=1;i<pts.length;i++) line(pts[i-1].x,pts[i-1].y,pts[i].x,pts[i].y,c,2);
+    pts.forEach(p=>out.push(`<circle cx="${p.x}" cy="${p.y}" r="3" fill="${c}"/>`));
+    const f=fs().find(x=>x.key===k);
+    out.push(`<rect x="${W-190}" y="${20+idx*22}" width="12" height="12" fill="${c}"/><text x="${W-172}" y="${31+idx*22}" font-size="13">${f?f.label:k}</text>`);
+  });
+  out.push(`<text x="${W/2-60}" y="22" font-size="16">掘進データグラフ</text><text x="12" y="18" font-size="12">縦軸：選択値</text>`);
+  svg.innerHTML=out.join('');
+}
 function downloadSvg(){let blob=new Blob([$('chart').outerHTML],{type:'image/svg+xml'});let a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='graph.svg';a.click();}
 init();
 </script></body></html>

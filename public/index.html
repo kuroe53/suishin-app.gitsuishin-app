@@ -13,18 +13,24 @@ label{font-size:13px;font-weight:600}input,select,textarea{width:100%;box-sizing
 @media print{
 body{background:white}.wrap{display:none!important}.noPrint{display:none!important}.printOnly{display:block!important}.card{box-shadow:none}
 @page{size:A4 landscape;margin:5mm}
-.page{page-break-after:always;position:relative;box-sizing:border-box;min-height:190mm;padding-bottom:20mm;overflow:hidden}
+.page{page-break-after:always;position:relative;box-sizing:border-box;width:287mm;min-height:190mm;padding-bottom:13mm;overflow:hidden}
 .page:last-child{page-break-after:auto}
-.printLogo{position:absolute;right:6mm;bottom:2mm;max-width:34mm;max-height:16mm;object-fit:contain}
-.drivePrintTable{table-layout:fixed;width:100%;border-collapse:collapse}
-.drivePrintTable th,.drivePrintTable td{height:7mm;line-height:1.1;font-size:10.5px;padding:2px;overflow:hidden;word-break:break-word}
-.drivePrintTable th:first-child,.drivePrintTable td:first-child{width:34mm;font-weight:600}
-.driveRemarkRow td{height:32mm!important;vertical-align:top;text-align:left;white-space:pre-wrap;word-break:break-word;font-size:10px}
-.driveRemarkRow td:first-child{text-align:center;vertical-align:middle;font-size:12px;font-weight:600}
-.printMeta{width:100%;border-collapse:collapse;margin:2mm 0 3mm 0;table-layout:fixed}
-.printMeta th{background:#cfcfcf;font-size:11px;border:1px solid #111;padding:2px;text-align:center}
-.printMeta td{font-size:12px;border:1px solid #111;padding:3px;text-align:center;height:9mm}
-.lubPrintLogo{position:absolute;right:6mm;bottom:2mm;max-width:34mm;max-height:16mm;object-fit:contain}
+.printLogo,.lubPrintLogo{position:absolute;right:3mm;bottom:1mm;max-width:30mm;max-height:11mm;object-fit:contain;z-index:1}
+.drivePrintTable{table-layout:fixed;width:100%;border-collapse:collapse;margin-bottom:12mm}
+.drivePrintTable th,.drivePrintTable td{height:5.6mm;line-height:1.05;font-size:9.2px;padding:1px 2px;overflow:hidden;word-break:break-word}
+.drivePrintTable th:first-child,.drivePrintTable td:first-child{width:31mm;font-weight:600}
+.driveRemarkRow td{height:18mm!important;vertical-align:top;text-align:left;white-space:pre-wrap;word-break:break-word;font-size:8.8px;line-height:1.1}
+.driveRemarkRow td:first-child{text-align:center;vertical-align:middle;font-size:10.5px;font-weight:600}
+.printMeta{width:100%;border-collapse:collapse;margin:1mm 0 2mm 0;table-layout:fixed}
+.printMeta th{background:#cfcfcf;font-size:10px;border:1px solid #111;padding:1px;text-align:center}
+.printMeta td{font-size:11px;border:1px solid #111;padding:2px;text-align:center;height:7mm;word-break:break-word}
+.lubMeta{width:100%;border-collapse:collapse;margin:1mm 0 3mm 0;table-layout:fixed}
+.lubMeta th{background:#cfcfcf;border:1px solid #111;font-size:10px;padding:2px;text-align:center}
+.lubMeta td{border:1px solid #111;font-size:11px;padding:2px;text-align:center;height:7mm;word-break:break-word}
+.lubPrintTable{width:100%;border-collapse:collapse;table-layout:fixed;margin-bottom:13mm}
+.lubPrintTable th,.lubPrintTable td{border:1px solid #111;padding:2px;font-size:9px;line-height:1.1;word-break:break-word;overflow:hidden}
+.lubPrintTable th{background:#e5e5e5}
+.lubPrintTable td:last-child{font-size:8.8px;text-align:left;white-space:pre-wrap}
 }
 </style></head><body><div class="wrap">
 <div class="noPrint"><h1>掘進管理システム</h1>
@@ -132,7 +138,18 @@ function printDrive(){
  }).join('');
  window.print();
 }
-function printLub(){let s=currentProject.settings||{}, m=lub.materialName||'材料'; $('printArea').innerHTML=`<div class="page"><h2 style="text-align:center">滑材注入管理表</h2><div>工事名：${n(s.workName)}　施工者：${n(s.contractor)}　スパン名：${n(s.spanName)}</div><table><tr><th>日付</th><th>注入管No.</th><th>注入量ℓ</th><th>日注入計ℓ</th><th>累計注入ℓ</th><th>${m} kg</th><th>日使用計kg</th><th>累計使用kg</th><th>搬入量kg</th><th>総搬入kg</th><th>残数量kg</th><th style="width:28%">備考</th></tr>${(lub.records||[]).map(r=>`<tr><td>${fmtDate(r.date)}</td><td>${n(r.pipe)}</td><td>${n(r.injection_l)}</td><td>${n(r.day_injection)}</td><td>${n(r.total_injection)}</td><td>${n(r.material_kg)}</td><td>${n(r.day_material)}</td><td>${n(r.total_material)}</td><td>${n(r.carry_kg)}</td><td>${n(r.total_carry)}</td><td>${n(r.remaining)}</td><td>${n(r.remarks)}</td></tr>`).join('')}</table>${s.logo?`<img class="lubPrintLogo" src="${s.logo}">`:''}</div>`; window.print()}
+function printLub(){
+ let s=currentProject.settings||{}, m=lub.materialName||'材料';
+ const meta=`<table class="lubMeta">
+  <tr><th>工事名</th><td colspan="3">${n(s.workName)}</td><th>施工者</th><td colspan="3">${n(s.contractor)}</td><th>記入者</th><td>${n(s.writer)}</td></tr>
+  <tr><th>スパン名</th><td colspan="3">${n(s.spanName)}</td><th>管径</th><td colspan="2">${n(s.diameter)}</td><th>推進距離</th><td colspan="2">${n(s.distance)}</td></tr>
+  <tr><th>材料名</th><td colspan="9">${n(m)}</td></tr>
+ </table>`;
+ $('printArea').innerHTML=`<div class="page"><h2 style="text-align:center;margin:2mm 0 1mm 0">滑材注入管理表</h2>${meta}<table class="lubPrintTable">
+ <colgroup><col style="width:9%"><col style="width:7%"><col style="width:7%"><col style="width:8%"><col style="width:8%"><col style="width:7%"><col style="width:8%"><col style="width:8%"><col style="width:7%"><col style="width:8%"><col style="width:7%"><col style="width:16%"></colgroup>
+ <tr><th>日付</th><th>注入管No.</th><th>注入量ℓ</th><th>日注入計ℓ</th><th>累計注入ℓ</th><th>${n(m)} kg</th><th>日使用計kg</th><th>累計使用kg</th><th>搬入量kg</th><th>総搬入kg</th><th>残数量kg</th><th>備考</th></tr>${(lub.records||[]).map(r=>`<tr><td>${fmtDate(r.date)}</td><td>${n(r.pipe)}</td><td>${n(r.injection_l)}</td><td>${n(r.day_injection)}</td><td>${n(r.total_injection)}</td><td>${n(r.material_kg)}</td><td>${n(r.day_material)}</td><td>${n(r.total_material)}</td><td>${n(r.carry_kg)}</td><td>${n(r.total_carry)}</td><td>${n(r.remaining)}</td><td>${n(r.remarks)}</td></tr>`).join('')}</table>${s.logo?`<img class="lubPrintLogo" src="${s.logo}">`:''}</div>`;
+ window.print();
+}
 function exportExcel(){location.href='/api/project/'+projectId+'/export.xlsx'} function backup(){location.href='/api/project/'+projectId+'/backup'}
 init().catch(e=>alert('エラー: '+e.message));
 </script></body></html>

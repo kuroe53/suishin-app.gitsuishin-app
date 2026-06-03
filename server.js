@@ -32,7 +32,7 @@ const defaultFields=[
 ];
 function init(){
  if(!fs.existsSync(DB)){
-  fs.writeFileSync(DB,JSON.stringify({projects:[{id:1,name:'デモ現場',settings:{title:'泥水式推進工データー表',workName:'',contractor:'',spanName:'',diameter:'',distance:'',writer:'',logo:''},fields:defaultFields,graphConfigs:[],lubricant:{materialName:'滑材',records:[]},records:[]}],nextProjectId:2,nextRecordId:1,nextLubId:1},null,2));
+  fs.writeFileSync(DB,JSON.stringify({projects:[{id:1,name:'デモ現場',settings:{title:'泥水式推進工データー表',workName:'',contractor:'',spanName:'',diameter:'',distance:'',writer:'',logo:'',printPerPage:10},fields:defaultFields,graphConfigs:[],lubricant:{materialName:'滑材',records:[]},records:[]}],nextProjectId:2,nextRecordId:1,nextLubId:1},null,2));
  }
 }
 function load(){init();return JSON.parse(fs.readFileSync(DB,'utf8'))}
@@ -43,7 +43,7 @@ function sortedRecords(p){return [...(p.records||[])].sort((a,b)=>(a.datetime||'
 function calcLub(rows){let byDay={},cumInj=0,cumMat=0,totalCarry=0; return [...rows].sort((a,b)=>(a.date||'').localeCompare(b.date||'')).map(r=>{let day=r.date||''; byDay[day]=byDay[day]||{inj:0,mat:0}; byDay[day].inj+=Number(r.injection_l||0); byDay[day].mat+=Number(r.material_kg||0); cumInj+=Number(r.injection_l||0); cumMat+=Number(r.material_kg||0); totalCarry+=Number(r.carry_kg||0); return {...r, day_injection:byDay[day].inj, total_injection:cumInj, day_material:byDay[day].mat, total_material:cumMat, total_carry:totalCarry, remaining:totalCarry-cumMat};});}
 
 app.get('/api/projects',(req,res)=>res.json(load().projects.map(p=>({id:p.id,name:p.name}))));
-app.post('/api/projects',(req,res)=>{let d=load(); let p={id:d.nextProjectId++,name:req.body.name||'新規現場',settings:{title:'泥水式推進工データー表',workName:'',contractor:'',spanName:'',diameter:'',distance:'',writer:'',logo:''},fields:JSON.parse(JSON.stringify(defaultFields)),graphConfigs:[],lubricant:{materialName:'滑材',records:[]},records:[]}; d.projects.push(p); save(d); res.json(p);});
+app.post('/api/projects',(req,res)=>{let d=load(); let p={id:d.nextProjectId++,name:req.body.name||'新規現場',settings:{title:'泥水式推進工データー表',workName:'',contractor:'',spanName:'',diameter:'',distance:'',writer:'',logo:'',printPerPage:10},fields:JSON.parse(JSON.stringify(defaultFields)),graphConfigs:[],lubricant:{materialName:'滑材',records:[]},records:[]}; d.projects.push(p); save(d); res.json(p);});
 app.get('/api/project/:id',(req,res)=>{let d=load(),p=project(d,req.params.id); if(!p)return res.status(404).json({error:'not found'}); p.fields=p.fields||defaultFields; p.settings=p.settings||{}; p.graphConfigs=p.graphConfigs||[]; p.lubricant=p.lubricant||{materialName:'滑材',records:[]}; res.json(p);});
 app.put('/api/project/:id/settings',(req,res)=>{let d=load(),p=project(d,req.params.id); if(!p)return res.status(404).json({error:'not found'}); p.settings={...p.settings,...req.body}; save(d); res.json(p.settings);});
 app.put('/api/project/:id/fields',(req,res)=>{let d=load(),p=project(d,req.params.id); if(!p)return res.status(404).json({error:'not found'}); p.fields=req.body.fields||p.fields||defaultFields; save(d); res.json(p.fields);});

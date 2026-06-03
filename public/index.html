@@ -10,7 +10,22 @@ label{font-size:13px;font-weight:600}input,select,textarea{width:100%;box-sizing
 .printOnly{display:none}
 @media(max-width:900px){.grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:560px){.grid{grid-template-columns:1fr}.tabs button,.btn{width:100%;margin:4px 0}th,td{font-size:12px;padding:4px}}
-@media print{body{background:white}.noPrint{display:none!important}.printOnly{display:block}.card{box-shadow:none}.page{page-break-after:always}.page:last-child{page-break-after:auto}@page{size:A4 landscape;margin:5mm}.lubPrintLogo{position:fixed;right:8mm;bottom:6mm;max-width:35mm;max-height:18mm}.driveRemarkRow td{height:28mm;vertical-align:top;text-align:left;white-space:pre-wrap;word-break:break-word;font-size:11px}.driveRemarkRow td:first-child{text-align:center;vertical-align:middle;font-size:13px;font-weight:600}}
+@media print{
+body{background:white}.wrap{display:none!important}.noPrint{display:none!important}.printOnly{display:block!important}.card{box-shadow:none}
+@page{size:A4 landscape;margin:5mm}
+.page{page-break-after:always;position:relative;box-sizing:border-box;min-height:190mm;padding-bottom:20mm;overflow:hidden}
+.page:last-child{page-break-after:auto}
+.printLogo{position:absolute;right:6mm;bottom:2mm;max-width:34mm;max-height:16mm;object-fit:contain}
+.drivePrintTable{table-layout:fixed;width:100%;border-collapse:collapse}
+.drivePrintTable th,.drivePrintTable td{height:7mm;line-height:1.1;font-size:10.5px;padding:2px;overflow:hidden;word-break:break-word}
+.drivePrintTable th:first-child,.drivePrintTable td:first-child{width:34mm;font-weight:600}
+.driveRemarkRow td{height:32mm!important;vertical-align:top;text-align:left;white-space:pre-wrap;word-break:break-word;font-size:10px}
+.driveRemarkRow td:first-child{text-align:center;vertical-align:middle;font-size:12px;font-weight:600}
+.printMeta{width:100%;border-collapse:collapse;margin:2mm 0 3mm 0;table-layout:fixed}
+.printMeta th{background:#cfcfcf;font-size:11px;border:1px solid #111;padding:2px;text-align:center}
+.printMeta td{font-size:12px;border:1px solid #111;padding:3px;text-align:center;height:9mm}
+.lubPrintLogo{position:absolute;right:6mm;bottom:2mm;max-width:34mm;max-height:16mm;object-fit:contain}
+}
 </style></head><body><div class="wrap">
 <div class="noPrint"><h1>掘進管理システム</h1>
 <div class="card"><label>現場</label><select id="projectSel" onchange="loadProject()"></select>
@@ -39,12 +54,12 @@ label{font-size:13px;font-weight:600}input,select,textarea{width:100%;box-sizing
 <div id="legend" class="legend"></div><svg id="graphSvg" viewBox="0 0 1000 480"></svg><p class="small">複数項目を同時表示できます。設定保存後は、プルダウンから選ぶだけで再表示できます。</p></section>
 
 <section id="settings" class="card hidden"><h2>様式・項目設定</h2>
-<div class="grid"><div><label>帳票タイトル</label><input id="setTitle"></div><div><label>工事名</label><input id="setWork"></div><div><label>施工者</label><input id="setContractor"></div><div><label>スパン名</label><input id="setSpan"></div><div><label>管径</label><input id="setDia"></div><div><label>推進距離</label><input id="setDist"></div><div><label>記入者</label><input id="setWriter"></div><div><label>右下ロゴ</label><input type="file" id="logoFile" accept="image/*"></div></div>
+<div class="grid"><div><label>帳票タイトル</label><input id="setTitle"></div><div><label>工事名</label><input id="setWork"></div><div><label>施工者</label><input id="setContractor"></div><div><label>スパン名</label><input id="setSpan"></div><div><label>管径</label><input id="setDia"></div><div><label>推進距離</label><input id="setDist"></div><div><label>記入者</label><input id="setWriter"></div><div><label>印刷1枚の表示データ数</label><input id="setPerPage" type="number" min="1" max="20" value="10"></div><div><label>右下ロゴ</label><input type="file" id="logoFile" accept="image/*"></div></div>
 <button class="btn" onclick="saveSettings()">様式設定保存</button><h3>項目名・単位・順序</h3><div id="fieldSettings"></div><button class="btn" onclick="saveFields()">項目設定保存</button></section>
 </div><div id="printArea" class="printOnly"></div>
 
 <script>
-let projectId=null,currentProject=null,records=[],fields=[],lub=null,editId=null,sortKey='datetime',sortAsc=true;
+let projectId=null,currentProject=null,records=[],fields=[],lub=null,editId=null,sortKey='pipe_no',sortAsc=false;
 const $=id=>document.getElementById(id);
 function today(){return new Date().toISOString().slice(0,10)}
 function fmtDateTime(s){if(!s)return''; return String(s).replace('T',' ').slice(0,16)}
@@ -90,10 +105,33 @@ function drawGraph(){let g=getGraphSetting(), svg=$('graphSvg'); svg.innerHTML='
 }
 function downloadSvg(){let blob=new Blob([$('graphSvg').outerHTML],{type:'image/svg+xml'}); let a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='graph.svg'; a.click();}
 
-function renderSettings(){let s=currentProject.settings||{}; $('setTitle').value=s.title||'';$('setWork').value=s.workName||'';$('setContractor').value=s.contractor||'';$('setSpan').value=s.spanName||'';$('setDia').value=s.diameter||'';$('setDist').value=s.distance||'';$('setWriter').value=s.writer||''; $('fieldSettings').innerHTML=fields.map(f=>`<div class="grid"><input id="o_${f.key}" type="number" value="${f.order||0}"><input id="l_${f.key}" value="${f.label}"><input id="u_${f.key}" value="${f.unit||''}"><label><input id="sh_${f.key}" type="checkbox" ${f.show!==false?'checked':''}>入力表示</label><label><input id="pr_${f.key}" type="checkbox" ${f.print!==false?'checked':''}>印刷表示</label><label><input id="gr_${f.key}" type="checkbox" ${f.graph!==false?'checked':''}>グラフ対象</label></div>`).join('')}
-async function saveSettings(){let logo=currentProject.settings.logo||''; let file=$('logoFile').files[0]; if(file)logo=await new Promise(res=>{let fr=new FileReader();fr.onload=()=>res(fr.result);fr.readAsDataURL(file)}); let body={title:$('setTitle').value,workName:$('setWork').value,contractor:$('setContractor').value,spanName:$('setSpan').value,diameter:$('setDia').value,distance:$('setDist').value,writer:$('setWriter').value,logo}; await api('/api/project/'+projectId+'/settings',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}); await loadProject(); alert('保存しました')}
+function renderSettings(){let s=currentProject.settings||{}; $('setTitle').value=s.title||'';$('setWork').value=s.workName||'';$('setContractor').value=s.contractor||'';$('setSpan').value=s.spanName||'';$('setDia').value=s.diameter||'';$('setDist').value=s.distance||'';$('setWriter').value=s.writer||''; $('setPerPage').value=s.printPerPage||10; $('fieldSettings').innerHTML=fields.map(f=>`<div class="grid"><input id="o_${f.key}" type="number" value="${f.order||0}"><input id="l_${f.key}" value="${f.label}"><input id="u_${f.key}" value="${f.unit||''}"><label><input id="sh_${f.key}" type="checkbox" ${f.show!==false?'checked':''}>入力表示</label><label><input id="pr_${f.key}" type="checkbox" ${f.print!==false?'checked':''}>印刷表示</label><label><input id="gr_${f.key}" type="checkbox" ${f.graph!==false?'checked':''}>グラフ対象</label></div>`).join('')}
+async function saveSettings(){let logo=currentProject.settings.logo||''; let file=$('logoFile').files[0]; if(file)logo=await new Promise(res=>{let fr=new FileReader();fr.onload=()=>res(fr.result);fr.readAsDataURL(file)}); let body={title:$('setTitle').value,workName:$('setWork').value,contractor:$('setContractor').value,spanName:$('setSpan').value,diameter:$('setDia').value,distance:$('setDist').value,writer:$('setWriter').value,printPerPage:Number($('setPerPage').value||10),logo}; await api('/api/project/'+projectId+'/settings',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}); await loadProject(); alert('保存しました')}
 async function saveFields(){fields=fields.map(f=>({...f,order:Number($('o_'+f.key).value||0),label:$('l_'+f.key).value,unit:$('u_'+f.key).value,show:$('sh_'+f.key).checked,print:$('pr_'+f.key).checked,graph:$('gr_'+f.key).checked})); await api('/api/project/'+projectId+'/fields',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({fields})}); await loadProject(); alert('保存しました')}
-function printDrive(){let s=currentProject.settings||{}, pf=fields.filter(f=>f.print!==false); let chunks=[]; for(let i=0;i<records.length;i+=10)chunks.push(records.slice(i,i+10)); $('printArea').innerHTML=chunks.map(ch=>`<div class="page"><h2 style="text-align:center">${s.title||'泥水式推進工データー表'}</h2><div>工事名：${n(s.workName)}　施工者：${n(s.contractor)}　スパン名：${n(s.spanName)}　管径：${n(s.diameter)}　推進距離：${n(s.distance)}　記入者：${n(s.writer)}</div><table><tr><th>項目</th>${ch.map(r=>`<th>${n(r.pipe_no)}</th>`).join('')}</tr><tr><td>日付</td>${ch.map(r=>`<td>${fmtDateTime(r.datetime)}</td>`).join('')}</tr>${pf.map(f=>`<tr><td>${f.label} ${f.unit}</td>${ch.map(r=>`<td>${n(r[f.key])}</td>`).join('')}</tr>`).join('')}<tr class="driveRemarkRow"><td>特記事項</td>${ch.map(r=>`<td>${n(r.remarks)}</td>`).join('')}</tr></table>${s.logo?`<img class="lubPrintLogo" src="${s.logo}">`:''}</div>`).join(''); window.print()}
+
+function printDrive(){
+ let s=currentProject.settings||{};
+ let pf=fields.filter(f=>f.print!==false);
+ let per=Math.max(1, Math.min(20, Number(s.printPerPage||10)));
+ let sorted=[...records].sort((a,b)=>Number(a.pipe_no||0)-Number(b.pipe_no||0) || String(a.datetime||'').localeCompare(String(b.datetime||'')));
+ let chunks=[]; for(let i=0;i<sorted.length;i+=per)chunks.push(sorted.slice(i,i+per)); if(!chunks.length)chunks=[[]];
+ const blank={};
+ const meta=`<table class="printMeta">
+  <tr><th>工事名</th><td colspan="3">${n(s.workName)}</td><th>施工者</th><td colspan="3">${n(s.contractor)}</td><th>記入者</th><td>${n(s.writer)}</td></tr>
+  <tr><th>スパン名</th><td colspan="3">${n(s.spanName)}</td><th>管径</th><td colspan="2">${n(s.diameter)}</td><th>推進距離</th><td colspan="2">${n(s.distance)}</td></tr>
+ </table>`;
+ $('printArea').innerHTML=chunks.map(ch=>{
+   let cols=[...ch]; while(cols.length<per)cols.push(blank);
+   return `<div class="page"><h2 style="text-align:center;margin:2mm 0 1mm 0">${s.title||'泥水式推進工データー表'}</h2>${meta}
+   <table class="drivePrintTable">
+    <tr><th>項目</th>${cols.map(r=>`<th>${n(r.pipe_no)}</th>`).join('')}</tr>
+    <tr><td>日付</td>${cols.map(r=>`<td>${fmtDateTime(r.datetime)}</td>`).join('')}</tr>
+    ${pf.map(f=>`<tr><td>${f.label}${f.unit?`（${f.unit}）`:''}</td>${cols.map(r=>`<td>${n(r[f.key])}</td>`).join('')}</tr>`).join('')}
+    <tr class="driveRemarkRow"><td>特記事項</td>${cols.map(r=>`<td>${n(r.remarks)}</td>`).join('')}</tr>
+   </table>${s.logo?`<img class="printLogo" src="${s.logo}">`:''}</div>`;
+ }).join('');
+ window.print();
+}
 function printLub(){let s=currentProject.settings||{}, m=lub.materialName||'材料'; $('printArea').innerHTML=`<div class="page"><h2 style="text-align:center">滑材注入管理表</h2><div>工事名：${n(s.workName)}　施工者：${n(s.contractor)}　スパン名：${n(s.spanName)}</div><table><tr><th>日付</th><th>注入管No.</th><th>注入量ℓ</th><th>日注入計ℓ</th><th>累計注入ℓ</th><th>${m} kg</th><th>日使用計kg</th><th>累計使用kg</th><th>搬入量kg</th><th>総搬入kg</th><th>残数量kg</th><th style="width:28%">備考</th></tr>${(lub.records||[]).map(r=>`<tr><td>${fmtDate(r.date)}</td><td>${n(r.pipe)}</td><td>${n(r.injection_l)}</td><td>${n(r.day_injection)}</td><td>${n(r.total_injection)}</td><td>${n(r.material_kg)}</td><td>${n(r.day_material)}</td><td>${n(r.total_material)}</td><td>${n(r.carry_kg)}</td><td>${n(r.total_carry)}</td><td>${n(r.remaining)}</td><td>${n(r.remarks)}</td></tr>`).join('')}</table>${s.logo?`<img class="lubPrintLogo" src="${s.logo}">`:''}</div>`; window.print()}
 function exportExcel(){location.href='/api/project/'+projectId+'/export.xlsx'} function backup(){location.href='/api/project/'+projectId+'/backup'}
 init().catch(e=>alert('エラー: '+e.message));
